@@ -1,0 +1,27 @@
+# EditorConfig для проекта KulonMonitor
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = false
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
+
+[*.pas]
+indent_size = 2
+
+[*.dpr]
+indent_size = 2
+
+[*.dproj]
+indent_size = 2
+
+[*.fmx]
+indent_size = 2
+
+[*.ini]
+indent_size = 2
