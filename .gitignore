@@ -1,9 +1,5 @@
 ﻿.svn
-VirtualKey
-VirtualKey_
-Resurs.exe
-instresursX.exe
-*Resource.rc
+InvestAPI
 lastopen
 *.bin
 *.dcp
@@ -50,11 +46,6 @@ __recovery
 *.s3db-shm
 FireDAC.Phys.*.pas
 FireDAC.inc
-Components/WebSockets/dcp
-ResursComponent
-BD Copies
-Devices
-Программы
 /FastMM
 /Program/Profiling
 /Bin/FastMM_FullDebugMode.dll
