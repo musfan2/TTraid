@@ -1,4 +1,4 @@
-﻿unit UMainForm;
+unit UMainForm;
 
 interface
 

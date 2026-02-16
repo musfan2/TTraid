@@ -3,7 +3,7 @@
 uses
   System.StartUpCopy,
   FMX.Forms,
-  UMainForm in 'UMainForm.pas' {MainForm};
+  UMainForm in 'Source\UMainForm.pas' {MainForm};
 
 {$R *.res}
 
