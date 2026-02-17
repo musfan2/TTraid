@@ -17,8 +17,6 @@ unit MyFlag;
 
 interface
 
-{$I 'directives.inc'}
-
 type
 
   // TMyFlag для потокобезопасной работы с флагами (заменяет Boolean)
@@ -84,15 +82,6 @@ begin
   Result := IfThen(IsSet, 'True', 'False');
 end;
 
-// Подавляем хинт FPC "Function result variable does not seem to be initialized"
-// TInterlocked.Exchange принимает var-параметр, но только ЗАПИСЫВАЕТ значение, не читает.
-// Добавление Result.FValue := 0 перед Exchange нарушило бы атомарность при NRVO-оптимизации,
-// когда Result указывает напрямую на целевую переменную.
-{$IFDEF FPC}
-  {$PUSH}     // Сохраняет текущие настройки компилятора в стек
-  {$HINTS OFF}
-{$ENDIF FPC}
-
 class operator TMyFlag.Implicit(const AValue: Boolean): TMyFlag;
 // Позволяют работать с IsSet обращаясь просто к имени экземпляра; Ord вернет 1, если True и 0, если False
 begin
@@ -130,9 +119,5 @@ class operator TMyFlag.LogicalNot(const AValue: TMyFlag): TMyFlag;
 begin
   TInterlocked.Exchange(Result.FValue, Ord(not AValue.IsSet));
 end;
-
-{$IFDEF FPC}
-  {$POP}      // Восстанавливает настройки компилятора из стека (отменяет HINTS OFF)
-{$ENDIF FPC}
 
 end.

@@ -24,18 +24,11 @@
 
 unit MyThread;
 
-// Совместимость с УСПД
-{$IFDEF USPD}
-{$I 'directives.inc'}
-{$ENDIF USPD}
-
 interface
 
 uses
 {$IFDEF MSWINDOWS}
-{$IFNDEF USPD}
   Windows,
-{$ENDIF USPD}
 {$ENDIF MSWINDOWS}
   Classes, SysUtils, Generics.Collections, MyThreadList, MyCriticalSection;
 
@@ -155,11 +148,39 @@ function KillThreadWithTimeout(var Thread: TThread; const MilliSecToWait: Cardin
 
 implementation
 
-uses DateUtils, LoggerUnit, SyncObjs,
-{$IFDEF USPD}
-  GlobalFunctions,
-{$ENDIF USPD}
-  ClearFunctions;
+uses DateUtils, SyncObjs;
+
+// Локальные заглушки для функций, которые были в ClearFunctions/LoggerUnit
+// В будущем замените на свою реализацию логирования
+
+procedure SaveToFile(const Mes: string);
+begin
+{$IFDEF MSWINDOWS}
+  OutputDebugString(PChar(Mes));
+{$ENDIF MSWINDOWS}
+end;
+
+procedure SaveLifeLog(const Mes: string);
+begin
+{$IFDEF MSWINDOWS}
+  OutputDebugString(PChar('LifeLog: ' + Mes));
+{$ENDIF MSWINDOWS}
+end;
+
+procedure NameThread(const AName: string);
+begin
+  TThread.NameThreadForDebugging(AName);
+end;
+
+procedure WaitProgramLoading;
+begin
+  // Заглушка: в новом проекте загрузка мгновенная
+end;
+
+procedure ApplicationProcessMessages;
+begin
+  // Заглушка: обработка сообщений приложения
+end;
 
 var // ЛОКАЛЬНЫЕ переменные модуля
   ErrorLine: Integer; // Номер строки с ошибкой (для try except)
@@ -174,17 +195,14 @@ begin
   if not Assigned(Thread) then
     Exit(False);
 
-{$IFNDEF FPC} // Thread.Finished  не работает под УСПД =(
   if Thread.Finished then
     Exit(True);
 
   if MilliSecToWait = 0 then
     Exit(Thread.Finished);
 
-  var
-  ST := GetTickCount64;
-  var
-  MainThread := IsUnderMainThread;
+  var ST := GetTickCount64;
+  var MainThread := (TThread.Current.ThreadID = MainThreadID);
 
   while not Thread.Finished do
   begin
@@ -198,9 +216,6 @@ begin
   end;
 
   Result := Thread.Finished;
-{$ELSE FPC} // Вариант для УСПД
-  Result := WaitForThreadTerminate(Thread.Handle, MilliSecToWait) = 0;
-{$ENDIF FPC}
   // Логируем таймаут
   if not Result then
   begin
@@ -523,16 +538,6 @@ begin
 {$ENDIF RELEASE}
             FDeadThreads.AddOrSetValue(Snapshot.ThreadID, True);
           end;
-
-{$IFDEF USPD}
-          ErrorLine := 8;
-          // На УСПД, если поток превысил время отклика в три раза - перезагружаемся!
-          if SecondsBetween(Now, Snapshot.Params.LastALiveTime) > Int64(Snapshot.Params.SecondsToPanic) * 3 then
-          begin
-            ErrorLine := 9;
-            Reboot(Mes, True);
-          end;
-{$ENDIF USPD}
         end
         else if WasDead then
         begin
@@ -612,11 +617,6 @@ begin
 {$IFDEF RELEASE}
         SaveLifeLog(Mes);
 {$ENDIF RELEASE}
-{$IFDEF USPD}
-        // На УСПД, если TThreadMonitorMonitor превысил время отклика в три раза - перезагружаемся!
-        if SecondsBetween(Now, TThreadMonitor.LastMonitorMonitorTime) >= SecondsToDead * 3 then
-          Reboot(Mes, True);
-{$ENDIF USPD}
       end;
 
       // Логируем замедление работы

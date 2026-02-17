@@ -17,11 +17,6 @@ unit MyTask;
 {$IFDEF DEBUG}
 // {$DEFINE MyTaskDEBUG} // Отладка по умолчанию только в дебаге!
 {$ENDIF DEBUG}
-//
-// Совместимость с УСПД
-{$IFDEF USPD}
-{$I 'directives.inc'}
-{$ENDIF USPD}
 
 interface
 
@@ -30,9 +25,7 @@ uses
   Classes,
   SysUtils,
   SyncObjs,
-{$IFNDEF FPC}
   Windows,
-{$ENDIF FPC}
   Generics.Collections,
   MyCriticalSection,
   MyFlag,
@@ -40,12 +33,8 @@ uses
 
 type
 
-  // Определяем свой тип для совместимости Delphi и FPC
-{$IFDEF FPC}
-  TMyProc = reference to procedure;
-{$ELSE}
-  TMyProc = TProc; // В Delphi TProc уже определён как reference to procedure
-{$ENDIF}
+  // Определяем свой тип для совместимости
+  TMyProc = TProc; // reference to procedure
 
   // Самописный аналог iTask на базе TThread. Подробности в заголовке модуля.
   TMyTask = class(TMyThread)
@@ -157,11 +146,11 @@ type
     { Действие выполняемое задачей }
     FAction: TTimerAction;
     { Время последнего выполнения задачи }
-    // Используем целые числа для атамарной работы
-{$IF Defined(cpu64) or Defined(WIN64)}  // cpu64 - используется в FPC, WIN64 - используется в Delphi
-    FLastTime: Int64; // NativeInt не подходитв Delphi!
+    // Используем целые числа для атомарной работы
+{$IF Defined(WIN64)}
+    FLastTime: Int64;
 {$ELSE}
-    FLastTime: Integer; // NativeInt не подходит в Delphi! Хватит до 2038 года =(
+    FLastTime: Integer; // Хватит до 2038 года
 {$ENDIF}
     { Флаг - была ли задача выполнена. }
     FExecuted: Boolean;
@@ -256,26 +245,14 @@ function TMyTaskSynchronizedNotAutoFree(const FuncName: string; const StartDelay
 implementation
 
 uses
-  ClearFunctions,
-{$IFNDEF FPC}
-{$IFDEF MSWINDOWS} // То, что нужно в Windows, но не нужно в FPC
+{$IFDEF MSWINDOWS}
   VCL.Forms,
 {$ENDIF MSWINDOWS}
-{$ENDIF FPC}
-  //
-{$IFDEF ISFMX}   // То, что нужно для FMX-проектов
+{$IFDEF ISFMX}
   FMX.Forms,
 {$ENDIF ISFMX}
-{$IFDEF USPD} // То, что нужно в USPD
-  uLog, GlobalObjects,
-{$ENDIF USPD}
-{$IFDEF OLDRESURS} // То, что нужно в Ресурсе
-  LoggerUnit,
-{$ENDIF OLDRESURS}
-{$IFNDEF FPC} // То, что нужно в Delphi
   System.Threading,
-{$ENDIF FPC}
-  DateUtils; // То что нужно везде (тут должен быть хотя бы 1 модуль, чтобы все ifdef выше работали нормально)
+  DateUtils;
 
 {$IFDEF MyTaskDEBUG}
 
@@ -290,15 +267,10 @@ procedure MyTaskDelay(const FStartDelay: Cardinal; const FProgramClosing: TMyFla
 
   procedure DelphiSleep(const ST: Cardinal);
   begin
-{$IFDEF FPC}
-    Sleep(ST);
-{$ELSE FPC}
-    { Golovachev 2025-07-03
-      Таски не треды и таски работают на тредах, соответственно
+    { Таски не треды и таски работают на тредах, соответственно
       если тред заснул, заснули где то и другие таски - а нам такого
       не надо. Нужно пробросить делей в механизмы тасков }
     TTask.CurrentTask.Wait(ST);
-{$ENDIF FPC}
   end;
 
 var
@@ -334,11 +306,7 @@ end;
 procedure TMyTaskAutoFree(const FuncName: string; const Method: TMyProc);
 // Самоубивающийся вариант без задержки и синхронизации
 begin
-{$IFDEF FPC} // В FPC нет TTask поэтому используем наш TMyTask
-  TMyTask.Create(FuncName, True, 0, False, Method, TMyFlag.GetFalse);
-{$ELSE FPC}  // TTask использует пул потоков и работает быстрее - пробуем в Delphi вернуться к нему
   TTask.Run(Method);
-{$ENDIF FPC}
 end;
 
 function TMyTaskNotAutoFree(const FuncName: string; const Method: TThreadProcedure): TMyTask;
@@ -350,9 +318,6 @@ end;
 procedure TMyTaskSynchronizedAutoFree(const FuncName: string; const Method: TMyProc);
 // Самоубивающися вариант с синхронизацией с главным потоком и без задержки
 begin
-{$IFDEF FPC} // В FPC нет TTask поэтому используем наш TMyTask
-  TMyTask.Create(FuncName, True, 0, True, Method, TMyFlag.GetFalse);
-{$ELSE FPC}  // TTask использует пул потоков и работает быстрее - пробуем в Delphi вернуться к нему
   TTask.Run(
     procedure
     begin
@@ -362,7 +327,6 @@ begin
           Method;
         end);
     end);
-{$ENDIF FPC}
 end;
 
 function TMyTaskSynchronizedNotAutoFree(const FuncName: string; const Method: TThreadProcedure): TMyTask;
@@ -377,16 +341,12 @@ procedure TMyTaskAutoFree(const FuncName: string; const StartDelayMS: Cardinal; 
 const Method: TMyProc);
 // Самоубивающийся вариант с задержкой и синхронизацией
 begin
-{$IFDEF FPC} // В FPC нет TTask поэтому используем наш TMyTask
-  TMyTask.Create(FuncName, True, 0, False, Method, TMyFlag.GetFalse);
-{$ELSE FPC}  // TTask использует пул потоков и работает быстрее - пробуем в Delphi вернуться к нему
   TTask.Run(
     procedure
     begin
       MyTaskDelay(StartDelayMS, inProgramClosing, True);
       Method;
     end);
-{$ENDIF FPC}
 end;
 
 function TMyTaskNotAutoFree(const FuncName: string; const StartDelayMS: Cardinal; const inProgramClosing: TMyFlag;
@@ -400,9 +360,6 @@ procedure TMyTaskSynchronizedAutoFree(const FuncName: string; const StartDelayMS
 const Method: TMyProc);
 // Самоубивающися вариант с синхронизацией и задержкой
 begin
-{$IFDEF FPC} // В FPC нет TTask поэтому используем наш TMyTask
-  TMyTask.Create(FuncName, True, StartDelayMS, True, Method, inProgramClosing);
-{$ELSE FPC}  // TTask использует пул потоков и работает быстрее - пробуем в Delphi вернуться к нему
   TTask.Run(
     procedure
     begin
@@ -413,7 +370,6 @@ begin
           Method;
         end);
     end);
-{$ENDIF FPC}
 end;
 
 function TMyTaskSynchronizedNotAutoFree(const FuncName: string; const StartDelayMS: Cardinal;
@@ -459,23 +415,9 @@ procedure TMyTask.LogDebug(Mes: string);
 // Логирование Важных событий
 begin
   Mes := 'TMyTask.LogDebug: ' + Mes;
-
-  // УСПД или просто FPC
-{$IFDEF USPD} // Вариант для USPD
-  SaveDebugDebug(Mes);
-{$ELSE USPD}
-{$IFDEF FPC} // Вариант для FPC, но не УСПД
-  WriteLn(Mes);
-{$ENDIF FPC}
-{$ENDIF USPD}
-  // Ресурс или просто Delphi
-{$IFDEF OLDRESURS} // Вариант для Ресурса
-  SaveToFile(Mes);
-{$ELSE OLDRESURS} // Delphi, но без Ресурса
 {$IFDEF MSWINDOWS}
-  OutputDebugString(PCHar(Mes));
+  OutputDebugString(PChar(Mes));
 {$ENDIF MSWINDOWS}
-{$ENDIF OLDRESURS}
 end;
 
 procedure TMyTask.Execute;
@@ -510,7 +452,7 @@ begin
     if inProgramClosing then
       Terminate;
 
-    ApplicationProcessMessages; // Нужен, чтобы не зависал интерфейс
+    Application.ProcessMessages; // Нужен, чтобы не зависал интерфейс
 
     if Assigned(self) and not Finished and not Terminated then
       Sleep(10); // Ждём, только если нужно!

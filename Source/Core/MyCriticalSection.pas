@@ -10,18 +10,10 @@
 
 unit MyCriticalSection;
 
-{$IF defined(USPD) and defined(DEBUG)}
-{$DEFINE DEBUGMEM} // На УСПД в дебаге всегда включаем DEBUGMEM
-{$ENDIF}
 // Включение отладки крит.секций в дебаге
-{$IFDEF DEBUGMEM}
+{$IFDEF DEBUG}
 {$DEFINE DEBUG_CRIT_SEC} // Отладка Критических секций по умолчанию только в дебаге!
-{$ENDIF DEBUGMEM}
-//
-// Совместимость с УСПД
-{$IFDEF USPD}
-{$I 'directives.inc'}
-{$ENDIF USPD}
+{$ENDIF DEBUG}
 
 interface
 
@@ -34,7 +26,6 @@ uses SysUtils, Classes,
 
 type
 
-{$IFNDEF FPC}
   // Особенности стандартного TLightweightMREW, которые призван решить TMyLightweightMREW
   // Проблемы:
   // 1. Отсутсвует поддержка рекурсивной записи (в Windows зависнет, в POSIX возникнет исключение) - решено
@@ -59,7 +50,6 @@ type
     function TryBeginRead: Boolean;
     procedure EndRead;
   end;
-{$ENDIF FPC}
 
   // Про inline: https://pascal-study.blogspot.com/2011/04/blog-post_2596.html
 
@@ -70,10 +60,8 @@ type
   strict private
     FProtectedObj: TObject; // Защищаемый объект для TMonitor
     FCriticalSection: TCriticalSection; // Крит.секция, если используется не TMonitor
-{$IFNDEF FPC}
-    // Синхронайзер для защиты объекта, который гораздо чаще читают, чем пишут (только Delphi)
+    // Синхронайзер для защиты объекта, который гораздо чаще читают, чем пишут
     FSynchronizer: TMyLightweightMREW; // Быстрее TMultiReadExclusiveWriteSynchronizer
-{$ENDIF FPC}
     FProtectedObjName: string;
     FFullLog: Boolean;
     FDeadTimeMS: Word;
@@ -137,15 +125,12 @@ type
     procedure LockObj(const AFuncName: string); virtual;
     procedure UnLockObj(const AFuncName: string); virtual;
 
-{$IFNDEF FPC}
     // Если "критическую секцию" гораздо чаще читают, а не изменяют, то выгоднее использовать вот эти методы
     // Использовать только с Try Finally !!
-    // ВНИМАНИЕ: Эти методы доступны только в Delphi! В FPC используйте Enter/Leave или LockObj/UnLockObj
     procedure LockForRead(const AFuncName: string); virtual;
     procedure UnLockAfterRead(const AFuncName: string); virtual;
     procedure LockForWrite(const AFuncName: string); virtual;
     procedure UnLockAfterWrite(const AFuncName: string); virtual;
-{$ENDIF FPC}
 
     // Обновить защищаемый объект. Используется в TMySaveIniFile
     procedure UpdateProtectedObj(const ProtectedObj: TObject; const AutoLeaveEnter: Boolean);
@@ -170,15 +155,12 @@ type
     procedure LockObj(const AFuncName: string); override;
     procedure UnLockObj(const AFuncName: string); override;
 
-{$IFNDEF FPC}
     // Если "критическую секцию" гораздо чаще читают, а не изменяют, то выгоднее использовать вот эти методы
     // Использовать только с Try Finally !!
-    // ВНИМАНИЕ: Эти методы доступны только в Delphi! В FPC используйте Enter/Leave или LockObj/UnLockObj
     procedure LockForRead(const AFuncName: string); override;
     procedure UnLockAfterRead(const AFuncName: string); override;
     procedure LockForWrite(const AFuncName: string); override;
     procedure UnLockAfterWrite(const AFuncName: string); override;
-{$ENDIF FPC}
 
     // Число входов\выходов при рекурсивной работе с крит.секцией
     property EnterCount: Integer read GetEnterCount; // Для TUndoHistoryManager и TMyThreadList
@@ -187,24 +169,13 @@ type
 implementation
 
 uses
-{$IFNDEF FPC}
-{$IFDEF MSWINDOWS} // То, что нужно в Windows, но не FPC
+{$IFDEF MSWINDOWS}
   Windows,
 {$ENDIF MSWINDOWS}
-{$ENDIF FPC}
-{$IFDEF FPC} // То, что нужно в FPC
-{$IFNDEF USPD_TEST}
-  uLog, GlobalObjects,
-{$ENDIF USPD_TEST}
-{$ENDIF FPC}
-{$IFDEF OLDRESURS} // То, что нужно в Ресурсе
-  LoggerUnit,
-{$ENDIF OLDRESURS}
   // То, что нужно всем!
   TypInfo, DateUtils;
 
 { TMyLightweightMREW }
-{$IFNDEF FPC}
 
 class operator TMyLightweightMREW.Initialize(out Dest: TMyLightweightMREW);
 begin
@@ -317,7 +288,6 @@ begin
     FRWLock.EndRead;
 end;
 
-{$ENDIF FPC}
 { TMyCriticalSection }
 
 constructor TMyCriticalSection.Create(const ObjectName: string; const DeadTimeMS: Word = 2000);
@@ -328,25 +298,8 @@ begin
   FDeadTimeMS := DeadTimeMS;
   FCriticalSection := TCriticalSection.Create;
 
-  // В FPC включаем подробный лог, если активирована отладка крит.секций в настройках!!!
-{$IFDEF FPC}
-{$IFNDEF USPD_TEST}
-// Включаем DEBUG_CRIT_SEC, если на УСПД включена отладка крит.секций !!!
-  // К сожалению, так не работает! $DEFINE работает всегда независимо от if
-  if Assigned(ConfigManager) then
-  begin
-    if ConfigManager.WriteCriticalSection then
-    begin
-      FFullLog := True; // Не трогай! А то сломается логирование крит.секций на УСПД!!
-      // {$DEFINE DEBUG_CRIT_SEC}; // К сожалению, так не работает! $DEFINE работает всегда независимо от if
-    end;
-  end
-  else
-    SaveCriticalSectionDebug('ERROR:   TMyCriticalSection.Create 1 NOT Assigned(ConfigManager) !!!');
-{$ENDIF USPD_TEST}
-{$ELSE FPC} // В Delphi по умолчанию он не нужен
   FFullLog := False;
-{$ENDIF FPC}
+
 {$IFDEF DEBUG_CRIT_SEC}
   // Стек типа блокировок. Работает по принципу: "Послений вошел, первый вышел"
   FLockTypeStack := TStack<TLockType>.Create;
@@ -366,25 +319,8 @@ begin
 
   FCriticalSection := TCriticalSection.Create;
 
-  // В FPC включаем подробный лог, если активирована отладка крит.секций в настройках!!!
-{$IFDEF FPC}
-{$IFNDEF USPD_TEST}
-  // Включаем DEBUG_CRIT_SEC, если на УСПД включена отладка крит.секций !!!
-  // К сожалению, так не работает! $DEFINE работает всегда независимо от if
-  if Assigned(ConfigManager) then
-  begin
-    if ConfigManager.WriteCriticalSection then
-    begin
-      FFullLog := True; // Не трогай! А то сломается логирование крит.секций на УСПД!!
-      // {$DEFINE DEBUG_CRIT_SEC}; // К сожалению, так не работает! $DEFINE работает всегда независимо от if
-    end;
-  end
-  else
-    SaveCriticalSectionDebug('ERROR:   TMyCriticalSection.Create 2 NOT Assigned(ConfigManager) !!!');
-{$ENDIF USPD_TEST}
-{$ELSE FPC} // В Delphi по умолчанию он не нужен
   FFullLog := False;
-{$ENDIF FPC}
+
 {$IFDEF DEBUG_CRIT_SEC}
   // Стек типа блокировок. Работает по принципу: "Послений вошел, первый вышел"
   FLockTypeStack := TStack<TLockType>.Create;
@@ -500,32 +436,23 @@ begin
 end;
 
 procedure TMyCriticalSection.LockObj(const AFuncName: string);
-{$IFNDEF FPC}
 var
   StartTime: UInt64;
   ShowedError: Boolean;
-{$ENDIF FPC}
 begin
 {$IFNDEF DEBUG_CRIT_SEC}  // Быстрый вариант
-  //
-{$IFDEF FPC} // TMonitor отсуствует в FPC, поэтому используем обычные крит.секции
-  Enter(AFuncName);
-{$ELSE FPC} // В Delphi TMonitor работает в 3 раза быстрее крит.секций
+  // В Delphi TMonitor работает в 3 раза быстрее крит.секций
   // Пробуем войти в TMonitor секцию (всегда через цикл!)
   StartTime := GetTickCount64;
   ShowedError := False;
   while not TMonitor.Enter(FProtectedObj, FDeadTimeMS) do
     CheckEnterTimeAndLogDeadLock(ShowedError, StartTime, AFuncName);
-{$ENDIF FPC}
-  //
 {$ELSE DEBUG_CRIT_SEC}  // Медленный, но с отладкой
 
   // Проверим, на сколько внимательно программисты читали описание класса!
   CheckAssignedProtectedObj(AFuncName);
 
-{$IFDEF FPC} // TMonitor отсуствует в FPC, поэтому используем обычные крит.секции
-  Enter(AFuncName);
-{$ELSE FPC} // В Delphi TMonitor работает в 3 раза быстрее крит.секций
+  // В Delphi TMonitor работает в 3 раза быстрее крит.секций
   // Пробуем войти в TMonitor секцию (всегда через цикл!)
   StartTime := GetTickCount64;
   ShowedError := False;
@@ -533,7 +460,6 @@ begin
     CheckEnterTimeAndLogDeadLock(ShowedError, StartTime, AFuncName);
 
   LogEnterResult(StartTime, AFuncName, 'TMonitor');
-{$ENDIF FPC}
   AddLockType(TLockType.ltObj); // Запомним тип блокировки!
 {$ENDIF DEBUG_CRIT_SEC}
 
@@ -543,28 +469,17 @@ end;
 procedure TMyCriticalSection.UnLockObj(const AFuncName: string);
 begin
 {$IFNDEF DEBUG_CRIT_SEC}  // Быстрый вариант
-  //
-{$IFDEF FPC} // TMonitor отсуствует в FPC, поэтому используем обычные крит.секции
-  Leave(AFuncName);
-{$ELSE FPC} // В Delphi TMonitor работает в 3 раза быстрее крит.секций
   TMonitor.Exit(FProtectedObj);
-{$ENDIF FPC}
-  //
 {$ELSE DEBUG_CRIT_SEC}  // Медленный, но с отладкой
   CheckLockType(AFuncName, TLockType.ltObj); // Проверим тип блокировки
 
   CheckAssignedProtectedObj(AFuncName); // Проверим, на сколько внимательно программисты читали описание класса!
 
-{$IFDEF FPC} // TMonitor отсуствует в FPC, поэтому используем обычные крит.секции
-  Leave(AFuncName);
-{$ELSE FPC} // В Delphi TMonitor работает в 3 раза быстрее крит.секций
   TMonitor.Exit(FProtectedObj);
   LogExitResult(AFuncName, 'TMonitor');
-{$ENDIF FPC}
 {$ENDIF DEBUG_CRIT_SEC}
 end;
 
-{$IFNDEF FPC}
 procedure TMyCriticalSection.LockForRead(const AFuncName: string);
 {$IFDEF DEBUG_CRIT_SEC}
 var
@@ -642,7 +557,6 @@ begin
   LogExitResult(AFuncName, 'TSynchronizer');
 {$ENDIF DEBUG_CRIT_SEC}
 end;
-{$ENDIF FPC}
 
 {$IFDEF DEBUG_CRIT_SEC}
 
@@ -699,66 +613,27 @@ procedure TMyCriticalSection.LogCritSec( { const } Mes: string);
 // Логирование Критических секций
 begin
   Mes := 'TMyCriticalSection ' + Mes;
-
-  // УСПД или просто FPC
-{$IFDEF FPC} // Вариант для FPC
-{$IFNDEF USPD_TEST}
-  SaveCriticalSectionDebug(Mes);
-{$ENDIF USPD_TEST}
-{$ELSE FPC}
-  // Ресурс или просто Delphi
-{$IFDEF OLDRESURS} // Вариант для Ресурса
-  SaveToFile(Mes);
-{$ELSE OLDRESURS} // Delphi, но без Ресурса
 {$IFDEF MSWINDOWS}
   OutputDebugString(PChar(Mes));
 {$ENDIF MSWINDOWS}
-{$ENDIF OLDRESURS}
-{$ENDIF FPC}
 end;
 
 procedure TMyCriticalSection.LogDebug( { const } Mes: string);
 // Логирование Рядовых событий
 begin
   Mes := 'TMyCriticalSection ' + Mes;
-
-  // УСПД или просто FPC
-{$IFDEF FPC} // Вариант для FPC
-{$IFNDEF USPD_TEST}
-  SaveDebugDebug(Mes);
-{$ENDIF USPD_TEST}
-{$ELSE FPC}
-  // Ресурс или просто Delphi
-{$IFDEF OLDRESURS} // Вариант для Ресурса
-  SaveToFile(Mes);
-{$ELSE OLDRESURS} // Delphi, но без Ресурса
 {$IFDEF MSWINDOWS}
   OutputDebugString(PChar(Mes));
 {$ENDIF MSWINDOWS}
-{$ENDIF OLDRESURS}
-{$ENDIF FPC}
 end;
 
 procedure TMyCriticalSection.LogWarning( { const } Mes: string);
 // Логирование Тревожных событий
 begin
   Mes := 'TMyCriticalSection ' + Mes;
-
-  // УСПД или просто FPC
-{$IFDEF FPC} // Вариант для FPC
-{$IFNDEF USPD_TEST}
-  SaveWarningDebug(Mes);
-{$ENDIF USPD_TEST}
-{$ELSE FPC}
-  // Ресурс или просто Delphi
-{$IFDEF OLDRESURS} // Вариант для Ресурса
-  SaveToFile(Mes);
-{$ELSE OLDRESURS} // Delphi, но без Ресурса
 {$IFDEF MSWINDOWS}
   OutputDebugString(PChar(Mes));
 {$ENDIF MSWINDOWS}
-{$ENDIF OLDRESURS}
-{$ENDIF FPC}
 end;
 
 {$IFDEF DEBUG_CRIT_SEC}
@@ -854,7 +729,6 @@ begin
   AtomicDecrement(FEnterCount); // Число входов в крит. секцию
 end;
 
-{$IFNDEF FPC}
 procedure TMyCriticalSectionWithEnterCount.LockForRead(const AFuncName: string);
 begin
   inherited;
@@ -878,6 +752,5 @@ begin
   inherited;
   AtomicDecrement(FEnterCount); // Число входов в крит. секцию
 end;
-{$ENDIF FPC}
 
 end.

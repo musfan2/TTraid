@@ -11,11 +11,6 @@
 
 unit MyIniFile;
 
-// Совместимость с УСПД
-{$IFDEF USPD}
-{$I 'directives.inc'}
-{$ENDIF USPD}
-
 interface
 
 // Здесь не должно быть ClearFunctions, SysFunc и других зависимостей от Ресурса и УСПД!
@@ -82,7 +77,7 @@ type
 implementation
 
 uses
-  SysUtils, ClearFunctions;
+  SysUtils;
 
 {$REGION 'TMySaveIniFile'}
 
@@ -127,10 +122,6 @@ begin
       FMyIniFileThread := TMyIniFileThread.Create(Self, SavePeriodSec)
     else
       FMyIniFileThread := nil;
-
-{$IFDEF FPC}  // Доп. настройка для УСПД - работа не тестировалась!
-    FIniFile.WriteBOM := True;
-{$ENDIF FPC}
   end
   else
     raise Exception.Create('Ошибка открытия файла настроек "' + IniPath + '"!');
@@ -298,9 +289,6 @@ begin
   LockForWrite('Reload');
   try
     FIniFile.Encoding := TEncoding.UTF8;
-{$IFDEF FPC}  // Доп. настройка для УСПД - работа не тестировалась!
-    FIniFile.WriteBOM := True;
-{$ENDIF FPC}
   finally
     UnlockAfterWrite('Reload');
   end;

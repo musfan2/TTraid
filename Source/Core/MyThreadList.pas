@@ -12,13 +12,10 @@
 
 unit MyThreadList;
 
-// Включение отладки крит.секций в дебаге! Для УСПД так же включение в Release происходит в конструкторах
+// Включение отладки наших листов в дебаге!
 {$IFDEF DEBUG}
 {$DEFINE DEBUG_MyThreadList} // Отладка наших листов по умолчанию только в дебаге!
 {$ENDIF DEBUG}
-//
-// Совместимость с УСПД
-{$I 'directives.inc'}
 
 interface
 
@@ -28,10 +25,8 @@ uses
 
 type
 
-{$IFNDEF FPC}
-  // Для совместимости с FPC определим свой тип для Delphi (у FPC64 SizeInt = Int64, у FPC32 SizeInt = Integer)
+  // Определяем SizeInt для Delphi
   SizeInt = Integer;
-{$ENDIF FPC}
 
   // Класс прослойка для скрытия базового конструтора без параметров
   THideConstructor = class
@@ -93,9 +88,7 @@ type
     procedure AddRange(const Collection: IEnumerable<T>); overload;
     procedure AddRange(const Collection: TEnumerable<T>); overload;
     procedure Insert(const Index: SizeInt; const Value: T); inline;
-{$IFNDEF FPC} // У FPC нет аналогичного метода с доп параметром Count
     procedure InsertRange(const Index: SizeInt; const Values: array of T; Count: SizeInt); overload;
-{$ENDIF FPC}
     procedure InsertRange(const Index: SizeInt; const Values: array of T); overload;
     procedure InsertRange(const Index: SizeInt; const Collection: IEnumerable<T>); overload;
     procedure InsertRange(const Index: SizeInt; const Collection: TEnumerable<T>); overload;
@@ -115,17 +108,13 @@ type
     procedure ForEach(const InProcedure: TListProcedure);
 
     procedure Sort(const AComparer: IComparer<T>); overload;
-{$IFNDEF FPC}
     procedure Sort(const AComparer: IComparer<T>; Index, Count: SizeInt); overload;
-{$ENDIF FPC}
     function BinarySearch(const Item: T; out FoundIndex: SizeInt): Boolean; overload;
     function BinarySearch(const Item: T; out FoundIndex: SizeInt; const AComparer: IComparer<T>): Boolean; overload;
-{$IFNDEF FPC}
     function BinarySearch(const Item: T; out FoundIndex: SizeInt; const AComparer: IComparer<T>; Index, Count: SizeInt)
       : Boolean; overload;
-{$ENDIF FPC}
     function ToArray(const FuncName: string): TArray<T>; reintroduce; deprecated
-{$IFNDEF FPC}'Метод ToArray не потокобезопасен и под запретом!'{$ENDIF FPC};
+      'Метод ToArray не потокобезопасен и под запретом!';
     property Capacity: SizeInt read GetCapacity write SetCapacity;
     property Duplicates: TDuplicates read FDuplicates write FDuplicates;
     property MaxElementCount: SizeInt read FMaxElementCount write SetMaxElementCount;
@@ -240,13 +229,11 @@ type
     function ContainsKey(const Key: K): Boolean; // inline; // не имеет смысла !!!
     function ContainsValue(const Value: V): Boolean; // inline; // не имеет смысла !!!
     function ToArray(const FuncName: string): TArray<TMyPair>; reintroduce; deprecated
-{$IFNDEF FPC}'Метод ToArray не потокобезопасен и под запретом!'{$ENDIF FPC};
-    function Count: SizeInt; // inline; // не имеет смысла !!!
-{$IFNDEF FPC}
-    function TryAdd(const Key: K; const Value: V): Boolean; // inline; // не имеет смысла !!!
-    function GrowThreshold: SizeInt; // inline; // не имеет смысла !!!
-    function Collisions: SizeInt; // inline; // не имеет смысла !!!
-{$ENDIF FPC}
+      'Метод ToArray не потокобезопасен и под запретом!';
+    function Count: SizeInt;
+    function TryAdd(const Key: K; const Value: V): Boolean;
+    function GrowThreshold: SizeInt;
+    function Collisions: SizeInt;
     property Capacity: SizeInt read GetCapacity write SetCapacity;
     property Items[const Key: K]: V read GetItem write SetItem; default;
     property OnKeyNotify: TCollectionNotifyEvent<K> read GetOnKeyNotify write SetOnKeyNotify;
@@ -275,12 +262,7 @@ type
 implementation
 
 uses // Здесь не должно быть ClearFunctions, SysFunc и других зависимостей от Ресурса и УСПД!
-  // То, что связано с FPC
-{$IFDEF FPC} // То, что нужно в FPC
-  Generics.Strings,
-{$ELSE FPC} // То, что НЕ нужно в FPC
   Windows, RTLConsts,
-{$ENDIF FPC}
   // То, что нужно всем!
   DateUtils, SysUtils;
 
@@ -321,12 +303,7 @@ begin
   begin
     // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.LockForRead.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Enter вместо LockForRead
-    FMyCritSection.Enter(LogMes);
-{$ELSE FPC}
     FMyCritSection.LockForRead(LogMes);
-{$ENDIF FPC}
     Result := FList;
   end
   else
@@ -341,12 +318,7 @@ begin
   begin
     // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.LockForWrite.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Enter вместо LockForWrite
-    FMyCritSection.Enter(LogMes);
-{$ELSE FPC}
     FMyCritSection.LockForWrite(LogMes);
-{$ENDIF FPC}
     Result := FList;
   end
   else
@@ -361,12 +333,7 @@ begin
   begin
     // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.UnlockAfterRead.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Leave вместо UnlockAfterRead
-    FMyCritSection.Leave(LogMes);
-{$ELSE FPC}
     FMyCritSection.UnlockAfterRead(LogMes);
-{$ENDIF FPC}
   end;
 end;
 
@@ -378,12 +345,7 @@ begin
   begin
     // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.UnlockAfterWrite.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Leave вместо UnlockAfterWrite
-    FMyCritSection.Leave(LogMes);
-{$ELSE FPC}
     FMyCritSection.UnlockAfterWrite(LogMes);
-{$ENDIF FPC}
   end;
 end;
 
@@ -450,11 +412,7 @@ begin
       if (Duplicates = dupAccept) or (List.IndexOf(Value) = -1) then
         Result := List.Add(Value)
       else if Duplicates = dupError then
-{$IFDEF FPC}
-        raise EArgumentException.CreateRes(@SDuplicatesNotAllowed);
-{$ELSE FPC}
         raise EListError.CreateFmt(SDuplicateItem, [List.ItemValue(Value)]);
-{$ENDIF FPC}
       // Если задано ограничение на число элементов - подрежем список с начала
       GetIndex := TrimIfReachMaximum(List);
       if GetIndex then // Нужно перезапросить индекс элемента, так как он изменился
@@ -706,8 +664,6 @@ begin
   end;
 end;
 
-{$IFNDEF FPC}
-
 procedure TMyThreadList<T>.InsertRange(const Index: SizeInt; const Values: array of T; Count: SizeInt);
 var
   List: TList<T>;
@@ -723,8 +679,6 @@ begin
     UnlockAfterWrite('InsertRange 1');
   end;
 end;
-
-{$ENDIF FPC}
 
 procedure TMyThreadList<T>.InsertRange(const Index: SizeInt; const Values: array of T);
 var
@@ -871,8 +825,6 @@ begin
   end;
 end;
 
-{$IFNDEF FPC}
-
 procedure TMyThreadList<T>.Sort(const AComparer: IComparer<T>; Index, Count: SizeInt);
 var
   List: TList<T>;
@@ -885,8 +837,6 @@ begin
     UnlockAfterWrite('Sort 2');
   end;
 end;
-
-{$ENDIF FPC}
 
 function TMyThreadList<T>.BinarySearch(const Item: T; out FoundIndex: SizeInt): Boolean;
 var
@@ -916,8 +866,6 @@ begin
   end;
 end;
 
-{$IFNDEF FPC}
-
 function TMyThreadList<T>.BinarySearch(const Item: T; out FoundIndex: SizeInt; const AComparer: IComparer<T>;
   Index, Count: SizeInt): Boolean;
 var
@@ -932,8 +880,6 @@ begin
     UnlockAfterWrite('BinarySearch 3');
   end;
 end;
-
-{$ENDIF FPC}
 
 {$ENDREGION 'TMyThreadList<T>'}
 {$REGION 'TMyThreadObjectList<T>'}
@@ -1005,11 +951,7 @@ begin
   List := LockForWrite('Dequeue');
   try
     if Assigned(List) and (List.Count > 0) then
-{$IFDEF FPC}
-      Result := List.ExtractIndex(0)
-{$ELSE FPC}
       Result := List.ExtractAt(0)
-{$ENDIF FPC}
     else
       Result := default (T);
   finally
@@ -1038,11 +980,7 @@ begin
   List := LockForWrite('Dequeue');
   try
     if Assigned(List) and (List.Count > 0) then
-{$IFDEF FPC}
-      Result := List.ExtractIndex(0)
-{$ELSE FPC}
       Result := List.ExtractAt(0)
-{$ENDIF FPC}
     else
       Result := default (T);
   finally
@@ -1100,14 +1038,8 @@ var
 begin
   if Assigned(FDic) and Assigned(FMyCritSection) then
   begin
-    // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.LockForRead.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Enter вместо LockForRead
-    FMyCritSection.Enter(LogMes);
-{$ELSE FPC}
     FMyCritSection.LockForRead(LogMes);
-{$ENDIF FPC}
     Result := FDic;
   end
   else
@@ -1120,14 +1052,8 @@ var
 begin
   if Assigned(FDic) and Assigned(FMyCritSection) then
   begin
-    // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.LockForWrite.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Enter вместо LockForWrite
-    FMyCritSection.Enter(LogMes);
-{$ELSE FPC}
     FMyCritSection.LockForWrite(LogMes);
-{$ENDIF FPC}
     Result := FDic;
   end
   else
@@ -1140,14 +1066,8 @@ var
 begin
   if Assigned(FDic) and Assigned(FMyCritSection) then
   begin
-    // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.UnlockAfterRead.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Leave вместо UnlockAfterRead
-    FMyCritSection.Leave(LogMes);
-{$ELSE FPC}
     FMyCritSection.UnlockAfterRead(LogMes);
-{$ENDIF FPC}
   end;
 end;
 
@@ -1157,14 +1077,8 @@ var
 begin
   if Assigned(FDic) and Assigned(FMyCritSection) then
   begin
-    // Отдельная переменная LogMes убирает возможную утечку при многопотоке
     LogMes := ClassName + '.UnlockAfterWrite.' + FuncName;
-{$IFDEF FPC}
-    // В FPC нет TMyLightweightMREW и TMonitor, используем Leave вместо UnlockAfterWrite
-    FMyCritSection.Leave(LogMes);
-{$ELSE FPC}
     FMyCritSection.UnlockAfterWrite(LogMes);
-{$ENDIF FPC}
   end;
 end;
 
@@ -1250,8 +1164,6 @@ begin
     UnlockAfterWrite('Clear');
   end;
 end;
-{$IFNDEF FPC}
-
 function TMyThreadDictionary<K, V>.Collisions: SizeInt;
 var
   Dic: TDictionary<K, V>;
@@ -1265,7 +1177,6 @@ begin
     UnlockAfterRead('Collisions');
   end;
 end;
-{$ENDIF FPC}
 
 function TMyThreadDictionary<K, V>.ContainsKey(const Key: K): Boolean;
 var
@@ -1416,8 +1327,6 @@ begin
   end;
 end;
 
-{$IFNDEF FPC}
-
 function TMyThreadDictionary<K, V>.GrowThreshold: SizeInt;
 var
   Dic: TDictionary<K, V>;
@@ -1431,7 +1340,6 @@ begin
     UnlockAfterRead('GrowThreshold');
   end;
 end;
-{$ENDIF FPC}
 
 procedure TMyThreadDictionary<K, V>.Remove(const Key: K);
 var
@@ -1596,8 +1504,6 @@ begin
     UnlockAfterWrite('TrimExcess');
   end;
 end;
-{$IFNDEF FPC}
-
 function TMyThreadDictionary<K, V>.TryAdd(const Key: K; const Value: V): Boolean;
 var
   Dic: TDictionary<K, V>;
@@ -1615,7 +1521,7 @@ begin
     UnlockAfterWrite('TryAdd');
   end;
 end;
-{$ENDIF FPC}
+
 {$ENDREGION 'TMyThreadDictionary<K, V>'}
 {$REGION 'TMyThreadObjectDictionary<K, V>'}
 
