@@ -147,11 +147,7 @@ type
     FAction: TTimerAction;
     { Время последнего выполнения задачи }
     // Используем целые числа для атомарной работы
-{$IF Defined(WIN64)}
     FLastTime: Int64;
-{$ELSE}
-    FLastTime: Integer; // Хватит до 2038 года
-{$ENDIF}
     { Флаг - была ли задача выполнена. }
     FExecuted: Boolean;
     { Время создания задачи }
@@ -245,14 +241,9 @@ function TMyTaskSynchronizedNotAutoFree(const FuncName: string; const StartDelay
 implementation
 
 uses
-{$IFDEF MSWINDOWS}
-  VCL.Forms,
-{$ENDIF MSWINDOWS}
-{$IFDEF ISFMX}
-  FMX.Forms,
-{$ENDIF ISFMX}
   System.Threading,
-  DateUtils;
+  DateUtils,
+  MyUtils;
 
 {$IFDEF MyTaskDEBUG}
 
@@ -452,7 +443,7 @@ begin
     if inProgramClosing then
       Terminate;
 
-    Application.ProcessMessages; // Нужен, чтобы не зависал интерфейс
+    ApplicationProcessMessages; // Нужен, чтобы не зависал интерфейс
 
     if Assigned(self) and not Finished and not Terminated then
       Sleep(10); // Ждём, только если нужно!
