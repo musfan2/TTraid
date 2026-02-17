@@ -48,6 +48,12 @@ inclusion: always
 |---------------------|---------------------|--------|
 | `TTimer` (для фоновых задач) | `TTimerThread` + `TTimerTask` | `MyTask.pas` |
 
+### HTTP-клиент
+
+| Вместо стандартного | Использовать из Core | Модуль |
+|---------------------|---------------------|--------|
+| `TNetHTTPClient` напрямую | `TMyHttpClient` | `MyHttpClient.pas` |
+
 ### Правила использования Core-модулей
 
 1. **TMyThread** — наследуй от него, а не от `TThread`. Первой строкой в `Execute` вызывай `inherited`. В цикле дёргай `ImAlive`. Завершение: `TMyThread.TerminateAndFree<T>(AThread)`.
@@ -57,6 +63,7 @@ inclusion: always
 5. **TMyThreadList<T>** — перед чтением: `LockForRead/UnlockAfterRead`, перед записью: `LockForWrite/UnlockAfterWrite`. Обязательно `try..finally`.
 6. **TMySaveIniFile** — для быстрого чтения/записи передавай `SavePeriodSec = 0`, для продолжительной работы — `SavePeriodSec = 5`.
 7. **TTimerThread + TTimerTask** — для периодических фоновых задач вместо `TTimer` (который работает только в главном потоке GUI).
+8. **TMyHttpClient** — обёртка над `TNetHTTPClient`. Не создавай `TNetHTTPClient` напрямую! Используй `CreateHTTPClient` / `CreateHTTPSClient` для создания экземпляра, или классовые методы (`HttpsClientPost`, `HttpsClientGet`, `HttpsClientPatch` и HTTP-аналоги) для быстрых запросов без создания экземпляра. Настройка прокси — через `SetProxy` / `SetProxyAuth` на экземпляре, либо через глобальный callback `TMyHttpClient.OnConfigureClient`.
 
 ## Стиль кода
 
@@ -110,3 +117,4 @@ inclusion: always
 - Использовать стандартные `TThread`, `TCriticalSection`, `TTask.Run`, `TThreadList`, `Boolean` для межпоточных флагов — вместо них Core-модули (см. таблицу выше)
 - Использовать `TTimer` для фоновых задач — вместо него `TTimerThread` + `TTimerTask`
 - Использовать `TIniFile` / `TMemIniFile` напрямую — вместо них `TMySaveIniFile`
+- Использовать `TNetHTTPClient` напрямую — вместо него `TMyHttpClient` из `MyHttpClient.pas`

@@ -44,7 +44,7 @@ uses
   // 1. Системные модули
   SysUtils, Classes, SyncObjs,
   // 2. Core-модули проекта (ПРИОРИТЕТ!)
-  MyCriticalSection, MyThread, MyFlag, MyThreadList, MyTask, MyIniFile;
+  MyCriticalSection, MyThread, MyFlag, MyThreadList, MyTask, MyIniFile, MyHttpClient;
 
 type
   TMyClass = class
@@ -229,6 +229,49 @@ if FCache.TryGetValue(InstrumentId, Instrument) then
   Result := Instrument;
 ```
 
+## HTTP-клиент — ТОЛЬКО TMyHttpClient (не TNetHTTPClient напрямую!)
+
+```pascal
+// Быстрый HTTPS POST без создания экземпляра (классовый метод)
+var
+  answer: string;
+  statusCode: Integer;
+begin
+  if TMyHttpClient.HttpsClientPost(URL, RequestBody, answer, statusCode) then
+    ProcessResponse(answer, statusCode);
+end;
+
+// Быстрый HTTPS GET
+if TMyHttpClient.HttpsClientGet(URL, answer, statusCode) then
+  ProcessResponse(answer, statusCode);
+
+// Создание экземпляра для нескольких запросов подряд
+var
+Client := TMyHttpClient.CreateHTTPSClient;
+try
+  // Настройка прокси (опционально)
+  Client.SetProxy('proxy.example.com', 8080);
+  Client.SetProxyAuth('user', 'pass');
+
+  // Добавление заголовков
+  Client.CustomHeaders['Authorization'] := 'Bearer ' + Token;
+
+  // Несколько запросов через один клиент
+  Client.Post(URL1, Stream1);
+  Client.Get(URL2);
+finally
+  FreeAndNil(Client);
+end;
+
+// Глобальная настройка клиента (прокси и т.д.) через callback
+TMyHttpClient.OnConfigureClient := ConfigureHttpClient;
+
+procedure TMainForm.ConfigureHttpClient(const AClient: TNetHTTPClient);
+begin
+  // Здесь можно настроить прокси, заголовки и т.д.
+end;
+```
+
 ## INI-файлы — ТОЛЬКО TMySaveIniFile
 
 ```pascal
@@ -320,6 +363,7 @@ var List := FOrders.LockForRead('MethodName');  // НЕПРАВИЛЬНО!
 - `TThreadList` вместо `TMyThreadList` — нет диагностики
 - `TIniFile` / `TMemIniFile` вместо `TMySaveIniFile` — нет потокобезопасности
 - `TTimer` для фоновых задач вместо `TTimerThread` — блокирует GUI
+- `TNetHTTPClient` напрямую вместо `TMyHttpClient` — нет единой настройки прокси
 - `Obj.Free` без `FreeAndNil` — висячие указатели
 - Обращение к объекту без `Assigned` — AV
 - Глобальные переменные без синхронизации — race conditions

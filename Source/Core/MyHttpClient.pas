@@ -1,9 +1,12 @@
 ﻿{
 
   Удобная обёртка для работы с TNetHTTPClient.
-  Автоматически подтягивает настройки прокси из Ресурса.
-  Можно использовать как готовые классовые методы для быстрой отправки запроса, так и создать полноценный TNetHTTPClient для более сложной работы.
-  Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient (они сами настраивают прокси).
+  Можно использовать как готовые классовые методы для быстрой отправки запроса,
+  так и создать полноценный TNetHTTPClient для более сложной работы.
+  Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient.
+
+  Настройка прокси — через SetProxy / SetProxyAuth перед вызовом запросов,
+  либо через глобальный обработчик OnConfigureClient.
 
   DoctorS, 2024-2025.
 }
@@ -17,63 +20,68 @@ uses
 
 type
 
+  // Callback для настройки клиента перед запросом (прокси, заголовки и т.д.)
+  TOnConfigureClient = procedure(const AClient: TNetHTTPClient) of object;
+
   // Удобная обёртка для работы с TNetHTTPClient
   TMyHttpClient = class(TNetHTTPClient)
   type
     THttpMethod = (hmPost, hmPatch, hmGet);
   private
-
-    // Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient (они сами настраивают прокси)
+    // Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient
     constructor Create(AOwner: TComponent); reintroduce;
 
     // Самая главная функция, которая всё делает =)
     function HttpClientCore(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean; const HttpMethod: THttpMethod; const ContentType: string): Boolean;
+      const HttpMethod: THttpMethod; const ContentType: string): Boolean;
 
   public
+    class var OnConfigureClient: TOnConfigureClient;
+
     // === Классовые методы можно вызывать без создания экземпляра класса! =====
 
     // Создание экземпляра для работы по HTTP с настройкой прокси(!) и заданием ContentType
     class function CreateHTTPClient(const ContentType: string = 'application/json'): TMyHttpClient;
-    // Создание экземпляра для работы по HTTPS с настройкой прокси(!). Позволяет указать параметры шифрования (оставь по умолчанию, если не уверен!)
+    // Создание экземпляра для работы по HTTPS. Позволяет указать параметры шифрования
     class function CreateHTTPSClient(const ContentType: string = 'application/json';
       const SecureProtocols: THTTPSecureProtocols = [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13]): TMyHttpClient;
 
-    // Классовые методы БЕЗ шифрования (HTTP) - можно вызывать без создания экземпляра класса!
-    // При необходимости можно расширить список HTTP-методов (Put, Update и т.д.) по аналогии
-    class function HttpClientPost(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-    class function HttpClientPatch(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-    class function HttpClientGet(const URL: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
+    // Настройка прокси на экземпляре
+    procedure SetProxy(const AHost: string; const APort: Integer);
+    procedure SetProxyAuth(const AUserName, APassword: string);
 
-    // Классовые методы С шифрованием (HTTPS) - можно вызывать без создания экземпляра класса!
-    // При необходимости можно расширить список HTTPS-методов (Put, Update и т.д.) по аналогии
+    // Классовые методы БЕЗ шифрования (HTTP)
+    class function HttpClientPost(const URL, Question: string; out Answer: string; out StatusCode: Integer;
+      const ContentType: string = 'application/json'): Boolean;
+    class function HttpClientPatch(const URL, Question: string; out Answer: string; out StatusCode: Integer;
+      const ContentType: string = 'application/json'): Boolean;
+    class function HttpClientGet(const URL: string; out Answer: string; out StatusCode: Integer;
+      const ContentType: string = 'application/json'): Boolean;
+
+    // Классовые методы С шифрованием (HTTPS)
     class function HttpsClientPost(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
+      const ContentType: string = 'application/json'): Boolean;
     class function HttpsClientPatch(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
+      const ContentType: string = 'application/json'): Boolean;
     class function HttpsClientGet(const URL: string; out Answer: string; out StatusCode: Integer;
-      const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
+      const ContentType: string = 'application/json'): Boolean;
   end;
 
 implementation
 
-uses SharedConstants, Options, SysFunc, JsonExchangeConst;
+const
+  INVALID_STATUS_CODE = -1;
 
 { TMyHttpClient }
 
 constructor TMyHttpClient.Create(AOwner: TComponent);
-// Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient (они сами настраивают прокси)
+// Штатный конструктор TNetHTTPClient под запретом! Используйте CreateHTTPClient и CreateHTTPSClient
 begin
   inherited;
 end;
 
 class function TMyHttpClient.CreateHTTPClient(const ContentType: string = 'application/json'): TMyHttpClient;
-// Создадим TNetHTTPClient и настроим прокси
-var
-  ProxySettings: TProxySettings;
+// Создадим TNetHTTPClient и настроим через callback
 begin
   Result := TMyHttpClient.Create(nil);
   Result.ConnectionTimeout := 10000;
@@ -84,29 +92,9 @@ begin
     // Устанавливаем заголовок Content-Type для запросов
     Result.ContentType := ContentType;
 
-    // Конфигурация прокси-сервера, если он включен
-    if CommonOptions.Proxy_Enabled then
-    begin
-      ProxySettings.Host := CommonOptions.ProxyServer;
-      ProxySettings.Port := CommonOptions.ProxyPort;
-
-      if CommonOptions.ProxyAuthEnabled then
-      begin
-        ProxySettings.UserName := CommonOptions.ProxyUsername;
-        ProxySettings.Password := CommonOptions.ProxyPassword;
-      end
-      else
-      begin
-        ProxySettings.UserName := '';
-        ProxySettings.Password := '';
-      end;
-
-      Result.ProxySettings := ProxySettings;
-    end;
-
-    // Дополнительные настройки при необходимости
-    // Например, установка пользовательских заголовков
-    // Result.CustomHeaders['Custom-Header'] := 'HeaderValue';
+    // Даём возможность вызывающему коду настроить клиент (прокси, заголовки и т.д.)
+    if Assigned(OnConfigureClient) then
+      OnConfigureClient(Result);
   except
     FreeAndNil(Result);
     raise;
@@ -121,15 +109,36 @@ begin
   Result.SecureProtocols := SecureProtocols;
 end;
 
+procedure TMyHttpClient.SetProxy(const AHost: string; const APort: Integer);
+var
+  Settings: TProxySettings;
+begin
+  Settings.Host := AHost;
+  Settings.Port := APort;
+  Settings.UserName := '';
+  Settings.Password := '';
+  ProxySettings := Settings;
+end;
+
+procedure TMyHttpClient.SetProxyAuth(const AUserName, APassword: string);
+var
+  Settings: TProxySettings;
+begin
+  Settings := ProxySettings;
+  Settings.UserName := AUserName;
+  Settings.Password := APassword;
+  ProxySettings := Settings;
+end;
+
 function TMyHttpClient.HttpClientCore(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean; const HttpMethod: THttpMethod; const ContentType: string): Boolean;
+  const HttpMethod: THttpMethod; const ContentType: string): Boolean;
 // Отправляет запрос и получает ответ
 var
   QuestionStream: TStringStream;
   Response: IHTTPResponse;
 begin
   Result := False;
-  StatusCode := INVALID_VALUE;
+  StatusCode := INVALID_STATUS_CODE;
   try
     // Создаем поток TStringStream для отправки данных и получения ответа
     QuestionStream := TStringStream.Create(Question, TEncoding.UTF8);
@@ -142,10 +151,10 @@ begin
         THttpMethod.hmPost: Response := Post(URL, QuestionStream);
         THttpMethod.hmPatch: Response := Patch(URL, QuestionStream);
         THttpMethod.hmGet: Response := Get(URL);
-      else raise Exception.Create('TMyHttpClient.HttpClientCore: не поддерживаемый метод!');
+      else raise Exception.Create('TMyHttpClient.HttpClientCore: неподдерживаемый метод!');
       end;
 
-      // Прочитаем ответ (он может быть даже если код ошибки 403 - такое в API вирт. ключа)
+      // Прочитаем ответ (он может быть даже если код ошибки 403)
       Answer := Response.ContentAsString(TEncoding.UTF8);
       StatusCode := Response.StatusCode;
     finally
@@ -159,25 +168,23 @@ begin
       if Assigned(Response) then
       begin
         Answer := Response.StatusText;
-        StatusCode := Response.StatusCode; // Получение кода состояния HTTP
+        StatusCode := Response.StatusCode;
       end
       else
       begin
-        Answer := '';
-        StatusCode := INVALID_VALUE; // ответа нет
+        Answer := E.Message;
+        StatusCode := INVALID_STATUS_CODE;
       end;
     end;
     on E: ENetHTTPException do
     begin
-      if ShowErrMes then
-        ShowErrorMessage('Нет связи с сервером! Проверьте настройки сети и прокси.', GetAllOpers);
-      Exit(False);
+      Answer := 'Нет связи с сервером: ' + E.Message;
+      StatusCode := INVALID_STATUS_CODE;
     end;
     on E: Exception do
-    begin // Общие исключения
-      if ShowErrMes then
-        ShowErrorMessage('Неизвестная ошибка: ' + E.Message, GetAllOpers);
-      Exit(False);
+    begin
+      Answer := 'Ошибка: ' + E.Message;
+      StatusCode := INVALID_STATUS_CODE;
     end;
   end;
 end;
@@ -185,88 +192,82 @@ end;
 // Методы без шифрования (HTTP)
 
 class function TMyHttpClient.HttpClientPost(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Post запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPClient;
+  Client := TMyHttpClient.CreateHTTPClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, Question, Answer, StatusCode, ShowErrMes, THttpMethod.hmPost, ContentType);
+    Result := Client.HttpClientCore(URL, Question, Answer, StatusCode, THttpMethod.hmPost, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
 class function TMyHttpClient.HttpClientPatch(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Patch запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPClient;
+  Client := TMyHttpClient.CreateHTTPClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, Question, Answer, StatusCode, ShowErrMes, THttpMethod.hmPatch, ContentType);
+    Result := Client.HttpClientCore(URL, Question, Answer, StatusCode, THttpMethod.hmPatch, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
 class function TMyHttpClient.HttpClientGet(const URL: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Get запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPClient;
+  Client := TMyHttpClient.CreateHTTPClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, '', Answer, StatusCode, ShowErrMes, THttpMethod.hmGet, ContentType);
+    Result := Client.HttpClientCore(URL, '', Answer, StatusCode, THttpMethod.hmGet, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
 // Методы c шифрованием (HTTPS)
 
 class function TMyHttpClient.HttpsClientPost(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Post запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPSClient;
+  Client := TMyHttpClient.CreateHTTPSClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, Question, Answer, StatusCode, ShowErrMes, THttpMethod.hmPost, ContentType);
+    Result := Client.HttpClientCore(URL, Question, Answer, StatusCode, THttpMethod.hmPost, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
 class function TMyHttpClient.HttpsClientPatch(const URL, Question: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Patch запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPSClient;
+  Client := TMyHttpClient.CreateHTTPSClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, Question, Answer, StatusCode, ShowErrMes, THttpMethod.hmPatch, ContentType);
+    Result := Client.HttpClientCore(URL, Question, Answer, StatusCode, THttpMethod.hmPatch, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
 class function TMyHttpClient.HttpsClientGet(const URL: string; out Answer: string; out StatusCode: Integer;
-  const ShowErrMes: Boolean = True; const ContentType: string = 'application/json'): Boolean;
-// Отправляет Get запрос и получает ответ
+  const ContentType: string = 'application/json'): Boolean;
 var
-  MyHttpClient: TMyHttpClient;
+  Client: TMyHttpClient;
 begin
-  MyHttpClient := TMyHttpClient.CreateHTTPSClient;
+  Client := TMyHttpClient.CreateHTTPSClient(ContentType);
   try
-    Result := MyHttpClient.HttpClientCore(URL, '', Answer, StatusCode, ShowErrMes, THttpMethod.hmGet, ContentType);
+    Result := Client.HttpClientCore(URL, '', Answer, StatusCode, THttpMethod.hmGet, ContentType);
   finally
-    FreeAndNil(MyHttpClient);
+    FreeAndNil(Client);
   end;
 end;
 
