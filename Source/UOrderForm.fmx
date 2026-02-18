@@ -1,0 +1,152 @@
+object OrderForm: TOrderForm
+  Left = 0
+  Top = 0
+  BorderStyle = Single
+  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1086#1088#1076#1077#1088#1072
+  ClientHeight = 340
+  ClientWidth = 400
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object LayoutMain: TLayout
+    Align = Client
+    Margins.Left = 16.000000000000000000
+    Margins.Top = 16.000000000000000000
+    Margins.Right = 16.000000000000000000
+    Margins.Bottom = 16.000000000000000000
+    Size.Width = 368.000000000000000000
+    Size.Height = 308.000000000000000000
+    Size.PlatformDefault = False
+    object LabelInstrument: TLabel
+      Position.X = 0.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1048#1085#1089#1090#1088#1091#1084#1077#1085#1090' (FIGI/'#1090#1080#1082#1077#1088'):'
+    end
+    object EditInstrument: TEdit
+      Position.X = 170.000000000000000000
+      Position.Y = 5.000000000000000000
+      Size.Width = 198.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+    end
+    object LabelDirection: TLabel
+      Position.X = 0.000000000000000000
+      Position.Y = 48.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1053#1072#1087#1088#1072#1074#1083#1077#1085#1080#1077':'
+    end
+    object ComboDirection: TComboBox
+      Position.X = 170.000000000000000000
+      Position.Y = 45.000000000000000000
+      Size.Width = 198.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object ListBoxItem1: TListBoxItem
+        Text = #1055#1086#1082#1091#1087#1082#1072
+      end
+      object ListBoxItem2: TListBoxItem
+        Text = #1055#1088#1086#1076#1072#1078#1072
+      end
+    end
+    object LabelQuantity: TLabel
+      Position.X = 0.000000000000000000
+      Position.Y = 88.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1050#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1083#1086#1090#1086#1074':'
+    end
+    object SpinQuantity: TSpinBox
+      Position.X = 170.000000000000000000
+      Position.Y = 85.000000000000000000
+      Size.Width = 198.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Min = 1.000000000000000000
+      Max = 10000.000000000000000000
+      Value = 1.000000000000000000
+    end
+    object LabelOrderType: TLabel
+      Position.X = 0.000000000000000000
+      Position.Y = 128.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1058#1080#1087' '#1086#1088#1076#1077#1088#1072':'
+    end
+    object ComboOrderType: TComboBox
+      Position.X = 170.000000000000000000
+      Position.Y = 125.000000000000000000
+      Size.Width = 198.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      OnChange = ComboOrderTypeChange
+      object ListBoxItem3: TListBoxItem
+        Text = #1056#1099#1085#1086#1095#1085#1099#1081
+      end
+      object ListBoxItem4: TListBoxItem
+        Text = #1051#1080#1084#1080#1090#1085#1099#1081
+      end
+      object ListBoxItem5: TListBoxItem
+        Text = #1055#1086' '#1083#1091#1095#1096#1077#1081' '#1094#1077#1085#1077
+      end
+    end
+    object LabelTargetPrice: TLabel
+      Position.X = 0.000000000000000000
+      Position.Y = 168.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1062#1077#1083#1077#1074#1072#1103' '#1094#1077#1085#1072':'
+      Visible = False
+    end
+    object EditTargetPrice: TEdit
+      Position.X = 170.000000000000000000
+      Position.Y = 165.000000000000000000
+      Size.Width = 198.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Visible = False
+      FilterChar = '0123456789.,'
+    end
+    object LayoutButtons: TLayout
+      Position.X = 0.000000000000000000
+      Position.Y = 260.000000000000000000
+      Size.Width = 368.000000000000000000
+      Size.Height = 40.000000000000000000
+      Size.PlatformDefault = False
+      object BtnSave: TButton
+        Position.X = 148.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 32.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+        OnClick = BtnSaveClick
+      end
+      object BtnCancel: TButton
+        Position.X = 260.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 32.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = #1054#1090#1084#1077#1085#1072
+        OnClick = BtnCancelClick
+      end
+    end
+  end
+end

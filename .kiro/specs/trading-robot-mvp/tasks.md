@@ -6,8 +6,8 @@
 
 ## Задачи
 
-- [ ] 1. Создать модуль конвертации цен TQuotationHelper
-  - [ ] 1.1 Создать `Source/UQuotationHelper.pas` с типом `TQuotation` (record: Units: Int64, Nano: Int32) и классом `TQuotationHelper` с методами `FromDouble`, `ToDouble`, `ToJson`, `FromJson`
+- [x] 1. Создать модуль конвертации цен TQuotationHelper
+  - [x] 1.1 Создать `Source/UQuotationHelper.pas` с типом `TQuotation` (record: Units: Int64, Nano: Int32) и классом `TQuotationHelper` с методами `FromDouble`, `ToDouble`, `ToJson`, `FromJson`
     - Формула: Units = Trunc(Value), Nano = Round(Frac(Value) * 1e9)
     - Обратно: Value = Units + Nano / 1e9
     - ToJson формирует строку `{"units":"<units>","nano":<nano>}`
@@ -23,8 +23,8 @@
     - Edge cases: 0.0, отрицательные значения, очень большие числа
     - _Requirements: 9.1, 9.2, 9.4_
 
-- [ ] 2. Создать модуль логирования TLogManager
-  - [ ] 2.1 Создать `Source/ULogManager.pas` с типом `TLogEntry` (record: Timestamp, Level, Message) и классом `TLogManager`
+- [x] 2. Создать модуль логирования TLogManager
+  - [x] 2.1 Создать `Source/ULogManager.pas` с типом `TLogEntry` (record: Timestamp, Level, Message) и классом `TLogManager`
     - Использовать TMyThreadList<TLogEntry> для потокобезопасного хранения
     - Методы: Log, LogInfo, LogError, GetEntries
     - TrimEntries: при превышении FMaxEntries удалять самые старые записи
@@ -41,8 +41,8 @@
     - Проверить: каждая запись имеет непустые Timestamp, Level, Message
     - **Validates: Requirements 10.1, 10.2**
 
-- [ ] 3. Создать модуль настроек TSettingsManager
-  - [ ] 3.1 Создать `Source/USettingsManager.pas` с типом `TAppSettings` (record) и классом `TSettingsManager`
+- [x] 3. Создать модуль настроек TSettingsManager
+  - [x] 3.1 Создать `Source/USettingsManager.pas` с типом `TAppSettings` (record) и классом `TSettingsManager`
     - Использовать TMySaveIniFile с SavePeriodSec=5 для продолжительной работы
     - Секция [Connection] в INI-файле
     - Методы: Load, Save, GetSettings, SetSettings
@@ -54,8 +54,8 @@
     - Проверить: Save → Load → GetSettings = исходные настройки
     - **Validates: Requirements 1.2, 1.3**
 
-- [ ] 4. Создать модуль управления ордерами TOrderManager
-  - [ ] 4.1 Создать `Source/UOrderManager.pas` с типами `TOrderDirection`, `TOrderType`, `TOrderStatus` (enum), `TOrderRecord` (record) и классом `TOrderManager`
+- [x] 4. Создать модуль управления ордерами TOrderManager
+  - [x] 4.1 Создать `Source/UOrderManager.pas` с типами `TOrderDirection`, `TOrderType`, `TOrderStatus` (enum), `TOrderRecord` (record) и классом `TOrderManager`
     - Использовать TMyThreadList<TOrderRecord> для потокобезопасного хранения
     - TMySaveIniFile с SavePeriodSec=5 для orders.ini
     - Методы: AddOrder, UpdateOrder, DeleteOrder, GetOrder, GetAllOrders, UpdatePrice, UpdateStatus
@@ -82,11 +82,11 @@
     - Проверить: ордера с совпадающим InstrumentId обновлены, остальные — нет
     - **Validates: Requirements 5.2**
 
-- [ ] 5. Checkpoint — убедиться, что все тесты проходят
+- [x] 5. Checkpoint — убедиться, что все тесты проходят
   - Убедиться, что все тесты проходят, задать вопросы пользователю при необходимости.
 
-- [ ] 6. Создать модуль API-клиента TApiClient
-  - [ ] 6.1 Создать `Source/UApiClient.pas` с классом `TApiClient`
+- [x] 6. Создать модуль API-клиента TApiClient
+  - [x] 6.1 Создать `Source/UApiClient.pas` с классом `TApiClient`
     - Использовать TMyHttpClient.HttpsClientPost для HTTPS-запросов
     - Настройка прокси через TMyHttpClient.OnConfigureClient callback
     - Заголовок Authorization: Bearer <token>
@@ -107,53 +107,53 @@
     - Обработка ошибки 40003 (невалидный токен)
     - _Requirements: 2.1, 2.3, 6.1_
 
-- [ ] 7. Создать форму настройки ордера TOrderForm
-  - [ ] 7.1 Создать `Source/UOrderForm.pas` и `Source/UOrderForm.fmx` — модальная форма для создания/редактирования ордера
+- [x] 7. Создать форму настройки ордера TOrderForm
+  - [x] 7.1 Создать `Source/UOrderForm.pas` и `Source/UOrderForm.fmx` — модальная форма для создания/редактирования ордера
     - Поля: инструмент (TEdit), направление (TComboBox: Покупка/Продажа), количество лотов (TSpinBox, min=1), тип ордера (TComboBox: Рыночный/Лимитный/По лучшей цене), целевая цена (TEdit, видимость зависит от типа)
     - Валидация: пустой инструмент, количество < 1, пустая цена для лимитных
     - Кнопки "Сохранить" / "Отмена"
     - Режим создания и редактирования (заполнение полей из TOrderRecord)
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-- [ ] 8. Собрать главную форму TMainForm
-  - [ ] 8.1 Обновить `Source/UMainForm.pas` и `Source/UMainForm.fmx` — добавить панель настроек подключения
+- [x] 8. Собрать главную форму TMainForm
+  - [x] 8.1 Обновить `Source/UMainForm.pas` и `Source/UMainForm.fmx` — добавить панель настроек подключения
     - Поля: токен (TEdit с PasswordChar), прокси (хост, порт, логин, пароль), кнопка "Показать токен"
     - Кнопка "Проверить подключение" → вызов TApiClient.GetAccounts в фоновом потоке
     - Выпадающий список счетов (TComboBox)
     - Поле интервала опроса (TSpinBox, 30..120 сек)
     - Кнопка "Сохранить настройки"
     - _Requirements: 1.1, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 5.4_
-  - [ ] 8.2 Добавить таблицу ордеров и кнопки управления
+  - [x] 8.2 Добавить таблицу ордеров и кнопки управления
     - TStringGrid с колонками: Статус, Инструмент, Направление, Кол-во, Целевая цена, Текущая цена, Тип
     - Кнопки: "Добавить", "Удалить", "Активировать" (выставить заявку), "Отменить" (отменить заявку)
     - Двойной клик по строке → открытие TOrderForm для редактирования
     - Подтверждение удаления через MessageDlg
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 6.1, 7.1_
-  - [ ] 8.3 Добавить панель лога и кнопки Старт/Стоп
+  - [x] 8.3 Добавить панель лога и кнопки Старт/Стоп
     - TMemo для отображения лога (привязка к TLogManager.OnLogEntry через TThread.Synchronize)
     - Кнопки "Старт" / "Стоп" для управления планировщиком
     - Индикатор состояния (TLabel: "Запущен" / "Остановлен")
     - _Requirements: 10.3, 11.1, 11.2, 11.4_
 
-- [ ] 9. Интегрировать планировщик и фоновые задачи
-  - [ ] 9.1 Создать TTimerThread и TTimerTask для опроса цен и синхронизации заявок в TMainForm
+- [x] 9. Интегрировать планировщик и фоновые задачи
+  - [x] 9.1 Создать TTimerThread и TTimerTask для опроса цен и синхронизации заявок в TMainForm
     - PricePollTask: вызывает TApiClient.GetLastPrices → обновляет цены через TOrderManager.UpdatePrice → обновляет TStringGrid через TThread.Synchronize
     - OrderSyncTask: вызывает TApiClient.GetOrders → синхронизирует статусы через TOrderManager.UpdateStatus → обновляет TStringGrid через TThread.Synchronize
     - Кнопка "Старт" → FScheduler.Enabled := True
     - Кнопка "Стоп" → FScheduler.Enabled := False
     - Обработка FProgramClosing при закрытии приложения
     - _Requirements: 5.1, 5.2, 5.3, 5.5, 8.1, 8.2, 8.3, 11.1, 11.2, 11.3, 11.5_
-  - [ ] 9.2 Реализовать выставление и отмену заявок из GUI
+  - [x] 9.2 Реализовать выставление и отмену заявок из GUI
     - Кнопка "Активировать": запуск TMyTaskAutoFree → TApiClient.PostOrder → обновление статуса ордера
     - Кнопка "Отменить": запуск TMyTaskAutoFree → TApiClient.CancelOrder → обновление статуса ордера
     - Обновление GUI через TThread.Synchronize
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3_
 
-- [ ] 10. Зарегистрировать все модули в TTraid.dpr
+- [x] 10. Зарегистрировать все модули в TTraid.dpr
   - Добавить все новые модули (UQuotationHelper, ULogManager, USettingsManager, UOrderManager, UApiClient, UOrderForm) в секцию uses файла TTraid.dpr
   - _Requirements: все_
 
-- [ ] 11. Финальный checkpoint — убедиться, что всё работает
+- [x] 11. Финальный checkpoint — убедиться, что всё работает
   - Убедиться, что все тесты проходят, задать вопросы пользователю при необходимости.
 
 ## Примечания

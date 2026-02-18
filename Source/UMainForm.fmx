@@ -2,10 +2,341 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = #1050#1086#1088#1084#1080#1083#1077#1094
-  ClientHeight = 480
-  ClientWidth = 640
+  ClientHeight = 700
+  ClientWidth = 900
+  Position = ScreenCenter
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
+  OnCreate = FormCreate
+  OnClose = FormClose
+  object PanelTop: TLayout
+    Align = Top
+    Size.Width = 900.000000000000000000
+    Size.Height = 200.000000000000000000
+    Size.PlatformDefault = False
+    object GroupBoxSettings: TGroupBox
+      Align = Client
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Size.Width = 884.000000000000000000
+      Size.Height = 192.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1080#1103
+      object LabelToken: TLabel
+        Position.X = 16.000000000000000000
+        Position.Y = 28.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1058#1086#1082#1077#1085':'
+      end
+      object EditToken: TEdit
+        Position.X = 100.000000000000000000
+        Position.Y = 25.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Password = True
+        PasswordChar = '*'
+        TabOrder = 0
+      end
+      object BtnShowToken: TButton
+        Position.X = 408.000000000000000000
+        Position.Y = 25.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1055#1086#1082#1072#1079#1072#1090#1100' '#1090#1086#1082#1077#1085
+        OnClick = BtnShowTokenClick
+      end
+      object LabelProxyHost: TLabel
+        Position.X = 16.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1055#1088#1086#1082#1089#1080':'
+      end
+      object EditProxyHost: TEdit
+        Position.X = 100.000000000000000000
+        Position.Y = 61.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TextPrompt = #1061#1086#1089#1090
+        TabOrder = 1
+      end
+      object LabelProxyPort: TLabel
+        Position.X = 288.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 40.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1055#1086#1088#1090':'
+      end
+      object SpinProxyPort: TSpinBox
+        Position.X = 332.000000000000000000
+        Position.Y = 61.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Min = 0.000000000000000000
+        Max = 65535.000000000000000000
+        Value = 0.000000000000000000
+        TabOrder = 2
+      end
+      object LabelProxyUser: TLabel
+        Position.X = 436.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 50.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1051#1086#1075#1080#1085':'
+      end
+      object EditProxyUser: TEdit
+        Position.X = 490.000000000000000000
+        Position.Y = 61.000000000000000000
+        Size.Width = 130.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+      object LabelProxyPass: TLabel
+        Position.X = 628.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 55.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1055#1072#1088#1086#1083#1100':'
+      end
+      object EditProxyPass: TEdit
+        Position.X = 688.000000000000000000
+        Position.Y = 61.000000000000000000
+        Size.Width = 130.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Password = True
+        TabOrder = 4
+      end
+      object BtnCheckConnection: TButton
+        Position.X = 16.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077
+        OnClick = BtnCheckConnectionClick
+      end
+      object LabelAccount: TLabel
+        Position.X = 210.000000000000000000
+        Position.Y = 103.000000000000000000
+        Size.Width = 45.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1057#1095#1105#1090':'
+      end
+      object ComboAccounts: TComboBox
+        Position.X = 260.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 260.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+      end
+      object LabelPollInterval: TLabel
+        Position.X = 540.000000000000000000
+        Position.Y = 103.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1048#1085#1090#1077#1088#1074#1072#1083' ('#1089#1077#1082'):'
+      end
+      object SpinPollInterval: TSpinBox
+        Position.X = 665.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Min = 30.000000000000000000
+        Max = 120.000000000000000000
+        Value = 60.000000000000000000
+        TabOrder = 6
+      end
+      object BtnSaveSettings: TButton
+        Position.X = 760.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Text = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+        OnClick = BtnSaveSettingsClick
+      end
+    end
+  end
+  object PanelBottom: TLayout
+    Align = Bottom
+    Size.Width = 900.000000000000000000
+    Size.Height = 200.000000000000000000
+    Size.PlatformDefault = False
+    object GroupBoxLog: TGroupBox
+      Align = Client
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Size.Width = 884.000000000000000000
+      Size.Height = 192.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1051#1086#1075
+      object MemoLog: TMemo
+        Align = Client
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 40.000000000000000000
+        Size.Width = 868.000000000000000000
+        Size.Height = 128.000000000000000000
+        Size.PlatformDefault = False
+        ReadOnly = True
+        WordWrap = True
+      end
+      object LayoutLogControls: TLayout
+        Align = Bottom
+        Size.Width = 884.000000000000000000
+        Size.Height = 36.000000000000000000
+        Size.PlatformDefault = False
+        object BtnStart: TButton
+          Position.X = 8.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 100.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1057#1090#1072#1088#1090
+          OnClick = BtnStartClick
+        end
+        object BtnStop: TButton
+          Position.X = 116.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 100.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1057#1090#1086#1087
+          OnClick = BtnStopClick
+        end
+        object LabelStatus: TLabel
+          Position.X = 230.000000000000000000
+          Position.Y = 6.000000000000000000
+          Size.Width = 200.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1054#1089#1090#1072#1085#1086#1074#1083#1077#1085
+          TextSettings.FontColor = claSilver
+        end
+      end
+    end
+  end
+  object PanelCenter: TLayout
+    Align = Client
+    Size.Width = 900.000000000000000000
+    Size.Height = 300.000000000000000000
+    Size.PlatformDefault = False
+    object GroupBoxOrders: TGroupBox
+      Align = Client
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Size.Width = 884.000000000000000000
+      Size.Height = 292.000000000000000000
+      Size.PlatformDefault = False
+      Text = #1054#1088#1076#1077#1088#1072
+      object GridOrders: TStringGrid
+        Align = Client
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 40.000000000000000000
+        Size.Width = 868.000000000000000000
+        Size.Height = 228.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        RowHeight = 24.000000000000000000
+        OnCellDblClick = GridOrdersCellDblClick
+        object ColStatus: TStringColumn
+          Header = #1057#1090#1072#1090#1091#1089
+          Size.Width = 100.000000000000000000
+        end
+        object ColInstrument: TStringColumn
+          Header = #1048#1085#1089#1090#1088#1091#1084#1077#1085#1090
+          Size.Width = 140.000000000000000000
+        end
+        object ColDirection: TStringColumn
+          Header = #1053#1072#1087#1088#1072#1074#1083#1077#1085#1080#1077
+          Size.Width = 100.000000000000000000
+        end
+        object ColQuantity: TStringColumn
+          Header = #1050#1086#1083'-'#1074#1086
+          Size.Width = 70.000000000000000000
+        end
+        object ColTargetPrice: TStringColumn
+          Header = #1062#1077#1083#1077#1074#1072#1103' '#1094#1077#1085#1072
+          Size.Width = 120.000000000000000000
+        end
+        object ColCurrentPrice: TStringColumn
+          Header = #1058#1077#1082#1091#1097#1072#1103' '#1094#1077#1085#1072
+          Size.Width = 120.000000000000000000
+        end
+        object ColOrderType: TStringColumn
+          Header = #1058#1080#1087
+          Size.Width = 110.000000000000000000
+        end
+      end
+      object LayoutOrderButtons: TLayout
+        Align = Bottom
+        Size.Width = 884.000000000000000000
+        Size.Height = 36.000000000000000000
+        Size.PlatformDefault = False
+        object BtnAddOrder: TButton
+          Position.X = 8.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 100.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1044#1086#1073#1072#1074#1080#1090#1100
+          OnClick = BtnAddOrderClick
+        end
+        object BtnDeleteOrder: TButton
+          Position.X = 116.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 100.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1059#1076#1072#1083#1080#1090#1100
+          OnClick = BtnDeleteOrderClick
+        end
+        object BtnActivateOrder: TButton
+          Position.X = 224.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 120.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1040#1082#1090#1080#1074#1080#1088#1086#1074#1072#1090#1100
+          OnClick = BtnActivateOrderClick
+        end
+        object BtnCancelOrder: TButton
+          Position.X = 352.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 100.000000000000000000
+          Size.Height = 30.000000000000000000
+          Size.PlatformDefault = False
+          Text = #1054#1090#1084#1077#1085#1080#1090#1100
+          OnClick = BtnCancelOrderClick
+        end
+      end
+    end
+  end
 end
