@@ -16,7 +16,8 @@ uses
   MyIniFile in 'Source\Core\MyIniFile.pas',
   MyTask in 'Source\Core\MyTask.pas',
   MyThread in 'Source\Core\MyThread.pas',
-  MyThreadList in 'Source\Core\MyThreadList.pas';
+  MyThreadList in 'Source\Core\MyThreadList.pas',
+  MyUtils in 'Source\Core\MyUtils.pas';
 
 {$R *.res}
 

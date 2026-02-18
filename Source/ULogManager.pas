@@ -33,6 +33,11 @@ type
     FMaxEntries: Integer;
     FOnLogEntry: TOnLogEntry;
   public
+    /// <summary>
+    /// Глобальный экземпляр для использования из Core-модулей.
+    /// Устанавливается приложением при создании менеджера лога.
+    /// </summary>
+    class var Instance: TLogManager;
     constructor Create(const AMaxEntries: Integer = 500);
     destructor Destroy; override;
 
@@ -50,6 +55,11 @@ type
     /// Добавить запись об ошибке (уровень 'ERROR').
     /// </summary>
     procedure LogError(const AMessage: string);
+
+    /// <summary>
+    /// Добавить предупреждение (уровень 'WARN').
+    /// </summary>
+    procedure LogWarning(const AMessage: string);
 
     /// <summary>
     /// Получить копию всех записей лога (потокобезопасно).
@@ -108,6 +118,11 @@ end;
 procedure TLogManager.LogError(const AMessage: string);
 begin
   Log('ERROR', AMessage);
+end;
+
+procedure TLogManager.LogWarning(const AMessage: string);
+begin
+  Log('WARN', AMessage);
 end;
 
 function TLogManager.GetEntries: TArray<TLogEntry>;

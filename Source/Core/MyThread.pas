@@ -148,24 +148,9 @@ function KillThreadWithTimeout(var Thread: TThread; const MilliSecToWait: Cardin
 
 implementation
 
-uses DateUtils, SyncObjs;
+uses DateUtils, SyncObjs, MyUtils, ULogManager;
 
-// Локальные заглушки для функций, которые были в ClearFunctions/LoggerUnit
-// В будущем замените на свою реализацию логирования
-
-procedure SaveToFile(const Mes: string);
-begin
-{$IFDEF MSWINDOWS}
-  OutputDebugString(PChar(Mes));
-{$ENDIF MSWINDOWS}
-end;
-
-procedure SaveLifeLog(const Mes: string);
-begin
-{$IFDEF MSWINDOWS}
-  OutputDebugString(PChar('LifeLog: ' + Mes));
-{$ENDIF MSWINDOWS}
-end;
+// Локальные функции модуля
 
 procedure NameThread(const AName: string);
 begin
@@ -174,12 +159,12 @@ end;
 
 procedure WaitProgramLoading;
 begin
-  // Заглушка: в новом проекте загрузка мгновенная
+  MyUtils.WaitProgramLoading;
 end;
 
 procedure ApplicationProcessMessages;
 begin
-  // Заглушка: обработка сообщений приложения
+  MyUtils.ApplicationProcessMessages;
 end;
 
 var // ЛОКАЛЬНЫЕ переменные модуля
@@ -223,8 +208,9 @@ begin
       ThreadName := TMyThread(Thread).SpecialName
     else
       ThreadName := Thread.ClassName;
-    SaveToFile('WaitForThreadFinish: ТАЙМАУТ для ' + ThreadName + ' (' + (MilliSecToWait div 1000).ToString +
-      ' сек)');
+    if Assigned(TLogManager.Instance) then
+      TLogManager.Instance.LogWarning('WaitForThreadFinish: ТАЙМАУТ для ' + ThreadName + ' (' + (MilliSecToWait div 1000).ToString +
+        ' сек)');
   end;
 end;
 
@@ -403,8 +389,9 @@ begin
   MS := GetTickCount64 - ST; // Обновим реальное время сна
   if (not Assigned(Thread) or not Thread.CheckTerminated) then
     if (MS > UInt64(SleepTimeMS) * 2) or (MS < UInt64(SleepTimeMS) * 0.9) then
-      SaveToFile('DelayForThread СПАЛ ' + MS.ToString + 'мс вместо ' + SleepTimeMS.ToString + 'мс!!!'
-        + ' StepMS = ' + StepMS.ToString);
+      if Assigned(TLogManager.Instance) then
+        TLogManager.Instance.LogWarning('DelayForThread СПАЛ ' + MS.ToString + 'мс вместо ' + SleepTimeMS.ToString + 'мс!!!'
+          + ' StepMS = ' + StepMS.ToString);
 end;
 
 { TThreadMonitor }
@@ -444,7 +431,8 @@ begin
       end;
 
       // Логируем завершение потока-монитора
-      SaveLifeLog(ClassName + ': Terminated !');
+      if Assigned(TLogManager.Instance) then
+        TLogManager.Instance.LogInfo(ClassName + ': Terminated !');
     end);
   FMonitorThread.FreeOnTerminate := False;
   FMonitorThread.Start;
@@ -532,10 +520,8 @@ begin
           begin
             ErrorLine := 7;
             Mes := 'Поток ' + ThreadName + ' перестал отвечать!';
-            SaveToFile(Mes);
-{$IFDEF RELEASE}
-            SaveLifeLog(Mes);
-{$ENDIF RELEASE}
+            if Assigned(TLogManager.Instance) then
+              TLogManager.Instance.LogError(Mes);
             FDeadThreads.AddOrSetValue(Snapshot.ThreadID, True);
           end;
         end
@@ -544,10 +530,8 @@ begin
           // FIX: Поток "отвис" - логируем восстановление
           ErrorLine := 10;
           Mes := 'Поток ' + ThreadName + ' возобновил работу!';
-          SaveToFile(Mes);
-{$IFDEF RELEASE}
-          SaveLifeLog(Mes);
-{$ENDIF RELEASE}
+          if Assigned(TLogManager.Instance) then
+            TLogManager.Instance.LogInfo(Mes);
           FDeadThreads.Remove(Snapshot.ThreadID);
         end;
       end;
@@ -555,14 +539,16 @@ begin
       ErrorLine := 11;
       // Логируем замедление работы
       if SecondsBetween(ST, Now) >= 1 then
-        SaveLifeLog('Обход ' + ThreadCount.ToString + ' потоков в TThreadMonitor занял ' + SecondsBetween(ST,
-          Now).ToString + ' c!');
+        if Assigned(TLogManager.Instance) then
+          TLogManager.Instance.LogWarning('Обход ' + ThreadCount.ToString + ' потоков в TThreadMonitor занял ' + SecondsBetween(ST,
+            Now).ToString + ' c!');
     end;
   except
     on E: Exception do
     begin
-      SaveToFile('Упали в TThreadMonitor.MonitorExecute ! ErrorLine = ' + ErrorLine.ToString +
-        ', ThreadName = ' + ThreadName + ', Ошибка: ' + E.Message);
+      if Assigned(TLogManager.Instance) then
+        TLogManager.Instance.LogError('Упали в TThreadMonitor.MonitorExecute ! ErrorLine = ' + ErrorLine.ToString +
+          ', ThreadName = ' + ThreadName + ', Ошибка: ' + E.Message);
     end;
   end;
 end;
@@ -602,7 +588,8 @@ begin
       ErrorLine := 0;
       if MinutesBetween(Now, FLastALifeTime) >= 60 then
       begin
-        SaveLifeLog(Self.ClassName + ' - живой!');
+        if Assigned(TLogManager.Instance) then
+          TLogManager.Instance.LogInfo(Self.ClassName + ' - живой!');
         FLastALifeTime := Now;
       end;
 
@@ -613,17 +600,16 @@ begin
       begin
         ErrorLine := 20;
         Mes := 'Монитор потоков ' + TThreadMonitor.ClassName + ' перестал отвечать!!!!';
-        SaveToFile(Mes);
-{$IFDEF RELEASE}
-        SaveLifeLog(Mes);
-{$ENDIF RELEASE}
+        if Assigned(TLogManager.Instance) then
+          TLogManager.Instance.LogError(Mes);
       end;
 
       // Логируем замедление работы
       ErrorLine := 30;
       if SecondsBetween(ST, Now) >= 1 then
-        SaveToFile('Проверка жизни монитора потоков в TThreadMonitorMonitor заняла ' + SecondsBetween(ST, Now)
-          .ToString + (' c!'));
+        if Assigned(TLogManager.Instance) then
+          TLogManager.Instance.LogWarning('Проверка жизни монитора потоков в TThreadMonitorMonitor заняла ' + SecondsBetween(ST, Now)
+            .ToString + ' c!');
 
       // Спим 10 сек шагами по 200 мс
       ErrorLine := 40;
@@ -631,14 +617,16 @@ begin
     except
       on E: Exception do
       begin
-        SaveToFile('Упали в TThreadMonitorMonitor.Execute ! ErrorLine = ' + ErrorLine.ToString + ', Ошибка: '
-          + E.Message);
+        if Assigned(TLogManager.Instance) then
+          TLogManager.Instance.LogError('Упали в TThreadMonitorMonitor.Execute ! ErrorLine = ' + ErrorLine.ToString + ', Ошибка: '
+            + E.Message);
       end;
     end;
   end;
 
   // Логируем завершение потока-монитора
-  SaveLifeLog(ClassName + ': Terminated !');
+  if Assigned(TLogManager.Instance) then
+    TLogManager.Instance.LogInfo(ClassName + ': Terminated !');
 end;
 
 initialization
@@ -658,8 +646,9 @@ try
 except
   on E: Exception do
   begin
-    SaveToFile('Упали в MyThread.Finalization ! ErrorLine = ' + ErrorLine.ToString + ', Ошибка: ' +
-      E.Message);
+    if Assigned(TLogManager.Instance) then
+      TLogManager.Instance.LogError('Упали в MyThread.Finalization ! ErrorLine = ' + ErrorLine.ToString + ', Ошибка: ' +
+        E.Message);
   end;
 end;
 

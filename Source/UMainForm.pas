@@ -176,6 +176,9 @@ begin
   // 1. Создаём менеджер лога
   FLogManager := TLogManager.Create(500);
 
+  // 1.1. Регистрируем глобальный экземпляр для Core-модулей
+  TLogManager.Instance := FLogManager;
+
   // 2. Создаём менеджер настроек
   FSettingsManager := TSettingsManager.Create('settings.ini');
 
@@ -237,7 +240,8 @@ begin
   end;
   // FPricePollTask и FOrderSyncTask освобождаются планировщиком (OwnerFree = True)
 
-  // 3. Отписываемся от событий лога
+  // 3. Отписываемся от событий лога и убираем глобальный экземпляр
+  TLogManager.Instance := nil;
   if Assigned(FLogManager) then
     FLogManager.OnLogEntry := nil;
 
