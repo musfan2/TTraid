@@ -3,7 +3,7 @@ unit ULogManager;
 interface
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Types,
   // Core-модули проекта
   MyThreadList;
 

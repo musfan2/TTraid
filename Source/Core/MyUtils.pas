@@ -42,7 +42,7 @@ end;
 procedure WaitProgramLoading;
 begin
   while ProgramLoading and not ProgramClosing do
-    Sleep(10);
+    TThread.Sleep(10);
 end;
 
 end.

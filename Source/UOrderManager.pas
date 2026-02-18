@@ -12,7 +12,7 @@ unit UOrderManager;
 interface
 
 uses
-  SysUtils,
+  SysUtils, System.Types,
   // Core-модули проекта
   MyThreadList, MyIniFile;
 
