@@ -46,7 +46,21 @@ type
     class operator LogicalOr(const ALeft, ARight: TMyFlag): TMyFlag;
     class operator LogicalXor(const ALeft, ARight: TMyFlag): TMyFlag;
     class operator LogicalNot(const AValue: TMyFlag): TMyFlag;
+
+    // Операторы сравнения = и <>
+    class operator Equal(const ALeft, ARight: TMyFlag): Boolean;
+    class operator NotEqual(const ALeft, ARight: TMyFlag): Boolean;
+    class operator Equal(const ALeft: TMyFlag; const ARight: Boolean): Boolean;
+    class operator NotEqual(const ALeft: TMyFlag; const ARight: Boolean): Boolean;
   end;
+
+var
+  { Флаг загрузки программы. Устанавливается в True при старте,
+    сбрасывается в False после завершения инициализации }
+  ProgramLoading: TMyFlag;
+
+  { Флаг завершения программы. Устанавливается в True при закрытии приложения }
+  ProgramClosing: TMyFlag;
 
 implementation
 
@@ -119,5 +133,33 @@ class operator TMyFlag.LogicalNot(const AValue: TMyFlag): TMyFlag;
 begin
   TInterlocked.Exchange(Result.FValue, Ord(not AValue.IsSet));
 end;
+
+class operator TMyFlag.Equal(const ALeft, ARight: TMyFlag): Boolean;
+// Оператор сравнения = для двух TMyFlag
+begin
+  Result := ALeft.IsSet = ARight.IsSet;
+end;
+
+class operator TMyFlag.NotEqual(const ALeft, ARight: TMyFlag): Boolean;
+// Оператор сравнения <> для двух TMyFlag
+begin
+  Result := ALeft.IsSet <> ARight.IsSet;
+end;
+
+class operator TMyFlag.Equal(const ALeft: TMyFlag; const ARight: Boolean): Boolean;
+// Оператор сравнения = с Boolean
+begin
+  Result := ALeft.IsSet = ARight;
+end;
+
+class operator TMyFlag.NotEqual(const ALeft: TMyFlag; const ARight: Boolean): Boolean;
+// Оператор сравнения <> с Boolean
+begin
+  Result := ALeft.IsSet <> ARight;
+end;
+
+initialization
+  ProgramLoading := True;   // При старте программа загружается
+  ProgramClosing := False;  // Программа ещё не завершается
 
 end.

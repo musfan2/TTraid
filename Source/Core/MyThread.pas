@@ -157,16 +157,6 @@ begin
   TThread.NameThreadForDebugging(AName);
 end;
 
-procedure WaitProgramLoading;
-begin
-  MyUtils.WaitProgramLoading;
-end;
-
-procedure ApplicationProcessMessages;
-begin
-  MyUtils.ApplicationProcessMessages;
-end;
-
 var // ЛОКАЛЬНЫЕ переменные модуля
   ErrorLine: Integer; // Номер строки с ошибкой (для try except)
   ThreadMonitorMonitor: TThreadMonitorMonitor;
@@ -197,7 +187,7 @@ begin
     Sleep(10);
 
     if MainThread then
-      ApplicationProcessMessages;
+      MyUtils.ApplicationProcessMessages;
   end;
 
   Result := Thread.Finished;
@@ -410,7 +400,7 @@ begin
       NameThread(ClassName);
 
       // Дождёмся окончания загрузки - она может занимать несколько минут на больших базах, особенно при обновлении
-      WaitProgramLoading;
+      MyUtils.WaitProgramLoading;
 
       // Время собственного пинга
       LastMonitorMonitorTime := Now;
@@ -577,7 +567,7 @@ begin
   FLastALifeTime := Now;
 
   // Дождёмся окончания загрузки - она может занимать несколько минут на больших базах, особенно при обновлении
-  WaitProgramLoading;
+  MyUtils.WaitProgramLoading;
 
   // Спим ещё 10 сек шагами по 200 мс, чтобы вышел в рабочий режим TThreadMonitor
   TMyThread.DelayForThread(Self, 10 * 1000);

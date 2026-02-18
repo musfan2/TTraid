@@ -17,14 +17,16 @@ function IsUnderMainThread: Boolean;
   но только если код выполняется в главном потоке }
 procedure ApplicationProcessMessages;
 
-{ Ожидание завершения загрузки программы (заглушка для совместимости) }
+{ Ожидание завершения загрузки программы.
+  Крутится в цикле с паузой 10 мс, пока ProgramLoading = True }
 procedure WaitProgramLoading;
 
 implementation
 
 uses
   Classes,
-  FMX.Forms;
+  FMX.Forms,
+  MyFlag;
 
 function IsUnderMainThread: Boolean;
 begin
@@ -39,7 +41,8 @@ end;
 
 procedure WaitProgramLoading;
 begin
-  // Заглушка: в новом проекте загрузка мгновенная
+  while ProgramLoading and not ProgramClosing do
+    Sleep(10);
 end;
 
 end.
