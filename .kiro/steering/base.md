@@ -7,7 +7,7 @@ inclusion: always
 ## Проект
 
 - **Название:** TTraid ("Кормилец") — торговый робот для работы с T-Invest API (Тинькофф Инвестиции)
-- **Язык:** Delphi 12 (Object Pascal), FMX (FireMonkey)
+- **Язык:** Delphi 11+ (Object Pascal), FMX (FireMonkey)
 - **Платформа:** Windows (Win32/Win64)
 - **API:** T-Invest REST API (JSON), базовый URL: `https://invest-public-api.tinkoff.ru/rest`
 - **Справочник API:** #[[file:Docs/T-Invest-API-Reference.md]]

@@ -1,4 +1,4 @@
-{
+﻿{
   Главная форма приложения "Кормилец" (торговый робот).
   Содержит панель настроек подключения, таблицу ордеров, панель лога
   и кнопки управления роботом (Старт/Стоп).
@@ -25,7 +25,8 @@ uses
   // Core-модули проекта
   MyFlag, MyTask, MyThread,
   // Модули приложения
-  ULogManager, USettingsManager, UOrderManager, UApiClient, UQuotationHelper;
+  ULogManager, USettingsManager, UOrderManager, UApiClient, UQuotationHelper,
+  FMX.Memo.Types, System.Rtti;
 
 type
   TMainForm = class(TForm)

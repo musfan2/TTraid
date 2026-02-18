@@ -8,9 +8,9 @@ object MainForm: TMainForm
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
-  DesignerMasterStyle = 0
   OnCreate = FormCreate
   OnClose = FormClose
+  DesignerMasterStyle = 0
   object PanelTop: TLayout
     Align = Top
     Size.Width = 900.000000000000000000
@@ -35,14 +35,14 @@ object MainForm: TMainForm
         Text = #1058#1086#1082#1077#1085':'
       end
       object EditToken: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 0
+        Password = True
         Position.X = 100.000000000000000000
         Position.Y = 25.000000000000000000
         Size.Width = 300.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
-        Password = True
-        PasswordChar = '*'
-        TabOrder = 0
       end
       object BtnShowToken: TButton
         Position.X = 408.000000000000000000
@@ -62,13 +62,14 @@ object MainForm: TMainForm
         Text = #1055#1088#1086#1082#1089#1080':'
       end
       object EditProxyHost: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 1
         Position.X = 100.000000000000000000
         Position.Y = 61.000000000000000000
         Size.Width = 180.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
         TextPrompt = #1061#1086#1089#1090
-        TabOrder = 1
       end
       object LabelProxyPort: TLabel
         Position.X = 288.000000000000000000
@@ -79,15 +80,15 @@ object MainForm: TMainForm
         Text = #1055#1086#1088#1090':'
       end
       object SpinProxyPort: TSpinBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 2
+        Cursor = crIBeam
+        Max = 65535.000000000000000000
         Position.X = 332.000000000000000000
         Position.Y = 61.000000000000000000
         Size.Width = 90.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
-        Min = 0.000000000000000000
-        Max = 65535.000000000000000000
-        Value = 0.000000000000000000
-        TabOrder = 2
       end
       object LabelProxyUser: TLabel
         Position.X = 436.000000000000000000
@@ -98,12 +99,13 @@ object MainForm: TMainForm
         Text = #1051#1086#1075#1080#1085':'
       end
       object EditProxyUser: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 3
         Position.X = 490.000000000000000000
         Position.Y = 61.000000000000000000
         Size.Width = 130.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
       end
       object LabelProxyPass: TLabel
         Position.X = 628.000000000000000000
@@ -114,13 +116,14 @@ object MainForm: TMainForm
         Text = #1055#1072#1088#1086#1083#1100':'
       end
       object EditProxyPass: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 4
+        Password = True
         Position.X = 688.000000000000000000
         Position.Y = 61.000000000000000000
         Size.Width = 130.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
-        Password = True
-        TabOrder = 4
       end
       object BtnCheckConnection: TButton
         Position.X = 16.000000000000000000
@@ -156,15 +159,17 @@ object MainForm: TMainForm
         Text = #1048#1085#1090#1077#1088#1074#1072#1083' ('#1089#1077#1082'):'
       end
       object SpinPollInterval: TSpinBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 6
+        Cursor = crIBeam
+        Min = 30.000000000000000000
+        Max = 120.000000000000000000
+        Value = 60.000000000000000000
         Position.X = 665.000000000000000000
         Position.Y = 100.000000000000000000
         Size.Width = 80.000000000000000000
         Size.Height = 28.000000000000000000
         Size.PlatformDefault = False
-        Min = 30.000000000000000000
-        Max = 120.000000000000000000
-        Value = 60.000000000000000000
-        TabOrder = 6
       end
       object BtnSaveSettings: TButton
         Position.X = 760.000000000000000000
@@ -179,6 +184,7 @@ object MainForm: TMainForm
   end
   object PanelBottom: TLayout
     Align = Bottom
+    Position.Y = 500.000000000000000000
     Size.Width = 900.000000000000000000
     Size.Height = 200.000000000000000000
     Size.PlatformDefault = False
@@ -193,19 +199,24 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       Text = #1051#1086#1075
       object MemoLog: TMemo
+        Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+        DataDetectorTypes = []
+        ReadOnly = True
+        TextSettings.WordWrap = True
         Align = Client
         Margins.Left = 8.000000000000000000
         Margins.Top = 4.000000000000000000
         Margins.Right = 8.000000000000000000
         Margins.Bottom = 40.000000000000000000
         Size.Width = 868.000000000000000000
-        Size.Height = 128.000000000000000000
+        Size.Height = 112.000000000000000000
         Size.PlatformDefault = False
-        ReadOnly = True
-        WordWrap = True
+        Viewport.Width = 864.000000000000000000
+        Viewport.Height = 108.000000000000000000
       end
       object LayoutLogControls: TLayout
         Align = Bottom
+        Position.Y = 156.000000000000000000
         Size.Width = 884.000000000000000000
         Size.Height = 36.000000000000000000
         Size.PlatformDefault = False
@@ -233,8 +244,8 @@ object MainForm: TMainForm
           Size.Width = 200.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          Text = #1054#1089#1090#1072#1085#1086#1074#1083#1077#1085
           TextSettings.FontColor = claSilver
+          Text = #1054#1089#1090#1072#1085#1086#1074#1083#1077#1085
         end
       end
     end
@@ -256,19 +267,22 @@ object MainForm: TMainForm
       Text = #1054#1088#1076#1077#1088#1072
       object GridOrders: TStringGrid
         Align = Client
+        CanFocus = True
+        ClipChildren = True
         Margins.Left = 8.000000000000000000
         Margins.Top = 4.000000000000000000
         Margins.Right = 8.000000000000000000
         Margins.Bottom = 40.000000000000000000
         Size.Width = 868.000000000000000000
-        Size.Height = 228.000000000000000000
+        Size.Height = 212.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         RowHeight = 24.000000000000000000
         OnCellDblClick = GridOrdersCellDblClick
+        Viewport.Width = 848.000000000000000000
+        Viewport.Height = 187.000000000000000000
         object ColStatus: TStringColumn
           Header = #1057#1090#1072#1090#1091#1089
-          Size.Width = 100.000000000000000000
         end
         object ColInstrument: TStringColumn
           Header = #1048#1085#1089#1090#1088#1091#1084#1077#1085#1090
@@ -276,7 +290,6 @@ object MainForm: TMainForm
         end
         object ColDirection: TStringColumn
           Header = #1053#1072#1087#1088#1072#1074#1083#1077#1085#1080#1077
-          Size.Width = 100.000000000000000000
         end
         object ColQuantity: TStringColumn
           Header = #1050#1086#1083'-'#1074#1086
@@ -297,6 +310,7 @@ object MainForm: TMainForm
       end
       object LayoutOrderButtons: TLayout
         Align = Bottom
+        Position.Y = 256.000000000000000000
         Size.Width = 884.000000000000000000
         Size.Height = 36.000000000000000000
         Size.PlatformDefault = False

@@ -242,8 +242,7 @@ implementation
 
 uses
   System.Threading,
-  DateUtils,
-  MyUtils;
+  DateUtils;
 
 {$IFDEF MyTaskDEBUG}
 
