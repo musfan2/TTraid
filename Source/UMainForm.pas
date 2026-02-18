@@ -5,7 +5,7 @@
 
   Все фоновые операции выполняются через TMyTaskAutoFree.
   Обновление GUI из фоновых потоков — только через TThread.Synchronize.
-  Межпоточный флаг FProgramClosing — TMyFlag (не Boolean!).
+  Глобальный флаг ProgramClosing из MyFlag.pas — для контроля завершения.
 
   Requirements: 1.1, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4,
                 5.4, 6.1, 7.1, 10.3, 11.1, 11.2, 11.4
@@ -101,7 +101,6 @@ type
     FSettingsManager: TSettingsManager;
     FOrderManager: TOrderManager;
     FApiClient: TApiClient;
-    FProgramClosing: TMyFlag;
     FScheduler: TTimerThread;
     FPricePollTask: TTimerTask;
     FOrderSyncTask: TTimerTask;
@@ -199,8 +198,8 @@ begin
   // 7. Подписываемся на события лога
   FLogManager.OnLogEntry := OnLogEntry;
 
-  // 8. Инициализируем флаг закрытия
-  FProgramClosing.IsSet := False;
+  // 8. Сбрасываем флаг загрузки — инициализация завершена
+  ProgramLoading := False;
 
   // 9. Создаём планировщик (TTimerThread)
   settings := FSettingsManager.GetSettings;
@@ -230,7 +229,7 @@ end;
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   // 1. Устанавливаем флаг закрытия для фоновых потоков
-  FProgramClosing.IsSet := True;
+  ProgramClosing := True;
 
   // 2. Останавливаем и освобождаем планировщик
   if Assigned(FScheduler) then
@@ -328,7 +327,7 @@ begin
       response := '';
       statusCode := -1;
 
-      if Assigned(FApiClient) and not FProgramClosing.IsSet then
+      if Assigned(FApiClient) and not ProgramClosing then
         success := FApiClient.GetAccounts(response, statusCode);
 
       // Обновляем GUI через Synchronize
@@ -341,7 +340,7 @@ begin
           accountId, accountName, accountType: string;
           I: Integer;
         begin
-          if FProgramClosing.IsSet then
+          if ProgramClosing then
             Exit;
 
           BtnCheckConnection.Enabled := True;
@@ -585,7 +584,7 @@ begin
       ErrorLine := 0;
       try
         ErrorLine := 10;
-        if FProgramClosing.IsSet then
+        if ProgramClosing then
           Exit;
 
         ErrorLine := 20;
@@ -626,12 +625,12 @@ begin
 
         // Обновляем GUI
         ErrorLine := 50;
-        if not FProgramClosing.IsSet then
+        if not ProgramClosing then
         begin
           TThread.Synchronize(nil,
             procedure
             begin
-              if not FProgramClosing.IsSet then
+              if not ProgramClosing then
                 RefreshOrderGrid;
             end);
         end;
@@ -703,7 +702,7 @@ begin
       ErrorLine := 0;
       try
         ErrorLine := 10;
-        if FProgramClosing.IsSet then
+        if ProgramClosing then
           Exit;
 
         ErrorLine := 20;
@@ -727,12 +726,12 @@ begin
               [statusCode, response]));
 
           // Показываем ошибку пользователю
-          if not FProgramClosing.IsSet then
+          if not ProgramClosing then
           begin
             TThread.Synchronize(nil,
               procedure
               begin
-                if not FProgramClosing.IsSet then
+                if not ProgramClosing then
                   MessageDlg('Ошибка отмены заявки. Код: ' + statusCode.ToString,
                     TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
               end);
@@ -741,12 +740,12 @@ begin
 
         // Обновляем GUI
         ErrorLine := 50;
-        if not FProgramClosing.IsSet then
+        if not ProgramClosing then
         begin
           TThread.Synchronize(nil,
             procedure
             begin
-              if not FProgramClosing.IsSet then
+              if not ProgramClosing then
                 RefreshOrderGrid;
             end);
         end;
@@ -803,7 +802,7 @@ begin
     var
       logLine: string;
     begin
-      if FProgramClosing.IsSet then
+      if ProgramClosing then
         Exit;
 
       if not Assigned(MemoLog) then
@@ -876,7 +875,7 @@ begin
   ErrorLine := 0;
   try
     ErrorLine := 10;
-    if FProgramClosing.IsSet then
+    if ProgramClosing then
       Exit;
     if not Assigned(FOrderManager) or not Assigned(FApiClient) then
       Exit;
@@ -934,7 +933,7 @@ begin
       ErrorLine := 70;
       for I := 0 to pricesArr.Count - 1 do
       begin
-        if FProgramClosing.IsSet then
+        if ProgramClosing then
           Exit;
 
         priceItem := pricesArr.Items[I] as TJSONObject;
@@ -954,12 +953,12 @@ begin
 
     // Обновляем таблицу в GUI-потоке
     ErrorLine := 80;
-    if not FProgramClosing.IsSet then
+    if not ProgramClosing then
     begin
       TThread.Synchronize(nil,
         procedure
         begin
-          if not FProgramClosing.IsSet then
+          if not ProgramClosing then
             RefreshOrderGrid;
         end);
     end;
@@ -990,7 +989,7 @@ begin
   ErrorLine := 0;
   try
     ErrorLine := 10;
-    if FProgramClosing.IsSet then
+    if ProgramClosing then
       Exit;
     if not Assigned(FSettingsManager) or not Assigned(FApiClient) or
        not Assigned(FOrderManager) then
@@ -1028,7 +1027,7 @@ begin
       ErrorLine := 70;
       for I := 0 to ordersArr.Count - 1 do
       begin
-        if FProgramClosing.IsSet then
+        if ProgramClosing then
           Exit;
 
         apiOrderObj := ordersArr.Items[I] as TJSONObject;
@@ -1053,12 +1052,12 @@ begin
 
     // Обновляем таблицу в GUI-потоке
     ErrorLine := 80;
-    if not FProgramClosing.IsSet then
+    if not ProgramClosing then
     begin
       TThread.Synchronize(nil,
         procedure
         begin
-          if not FProgramClosing.IsSet then
+          if not ProgramClosing then
             RefreshOrderGrid;
         end);
     end;
