@@ -17,8 +17,9 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.JSON, System.DateUtils,
+  System.JSON, System.DateUtils, System.Generics.Collections,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.DialogService,
   FMX.StdCtrls, FMX.Edit, FMX.ListBox, FMX.Layouts, FMX.Memo,
   FMX.Controls.Presentation, FMX.EditBox, FMX.SpinBox, FMX.Grid,
   FMX.Grid.Style, FMX.ScrollBox,
@@ -384,14 +385,14 @@ begin
           begin
             // Обработка ошибок (Req 2.3, 2.4)
             if statusCode = 401 then
-              MessageDlg('Токен недействителен или отсутствует.',
-                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0)
+              TDialogService.MessageDialog('Токен недействителен или отсутствует.',
+                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil)
             else if statusCode = -1 then
-              MessageDlg('Нет связи с сервером. Проверьте настройки прокси.',
-                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0)
+              TDialogService.MessageDialog('Нет связи с сервером. Проверьте настройки прокси.',
+                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil)
             else
-              MessageDlg('Ошибка подключения. Код: ' + statusCode.ToString,
-                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+              TDialogService.MessageDialog('Ошибка подключения. Код: ' + statusCode.ToString,
+                TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
           end;
         end);
     end);
@@ -497,8 +498,8 @@ begin
   selectedRow := GridOrders.Selected;
   if selectedRow < 0 then
   begin
-    MessageDlg('Выберите ордер для удаления.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Выберите ордер для удаления.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -510,8 +511,8 @@ begin
     Exit;
 
   // Подтверждение удаления (Req 3.4)
-  MessageDlg('Удалить ордер "' + orders[selectedRow].InstrumentId + '"?',
-    TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+  TDialogService.MessageDialog('Удалить ордер "' + orders[selectedRow].InstrumentId + '"?',
+    TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], TMsgDlgBtn.mbNo, 0,
     procedure(const AResult: TModalResult)
     begin
       if AResult = mrYes then
@@ -537,8 +538,8 @@ begin
   selectedRow := GridOrders.Selected;
   if selectedRow < 0 then
   begin
-    MessageDlg('Выберите ордер для активации.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Выберите ордер для активации.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -555,8 +556,8 @@ begin
 
   if settings.AccountId = '' then
   begin
-    MessageDlg('Не выбран счёт. Сохраните настройки подключения.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Не выбран счёт. Сохраните настройки подключения.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -655,8 +656,8 @@ begin
   selectedRow := GridOrders.Selected;
   if selectedRow < 0 then
   begin
-    MessageDlg('Выберите ордер для отмены.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Выберите ордер для отмены.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -673,8 +674,8 @@ begin
   // Проверяем, что у ордера есть биржевой ID (заявка была выставлена)
   if order.ExchangeOrderId = '' then
   begin
-    MessageDlg('Ордер не был выставлен на бирже. Нечего отменять.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Ордер не был выставлен на бирже. Нечего отменять.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -682,8 +683,8 @@ begin
 
   if settings.AccountId = '' then
   begin
-    MessageDlg('Не выбран счёт. Сохраните настройки подключения.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Не выбран счёт. Сохраните настройки подключения.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     Exit;
   end;
 
@@ -732,8 +733,8 @@ begin
               procedure
               begin
                 if not ProgramClosing then
-                  MessageDlg('Ошибка отмены заявки. Код: ' + statusCode.ToString,
-                    TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+                  TDialogService.MessageDialog('Ошибка отмены заявки. Код: ' + statusCode.ToString,
+                    TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
               end);
           end;
         end;

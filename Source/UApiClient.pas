@@ -203,7 +203,6 @@ var
   ErrorLine: Integer;
 begin
   ErrorLine := 0;
-  Result := False;
   AResponse := '';
   AStatusCode := -1;
   url := FBaseUrl + AEndpoint;

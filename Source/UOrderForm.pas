@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Types, UITypes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.DialogService,
   FMX.StdCtrls, FMX.Edit, FMX.ListBox, FMX.Layouts,
   FMX.Controls.Presentation, FMX.EditBox, FMX.SpinBox,
   UOrderManager;
@@ -85,8 +85,8 @@ begin
   // Проверка: инструмент не должен быть пустым (Req 4.5)
   if Trim(EditInstrument.Text) = '' then
   begin
-    MessageDlg('Укажите инструмент (FIGI или тикер).',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Укажите инструмент (FIGI или тикер).',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     EditInstrument.SetFocus;
     Exit;
   end;
@@ -94,8 +94,8 @@ begin
   // Проверка: количество лотов >= 1 (Req 4.4)
   if SpinQuantity.Value < 1 then
   begin
-    MessageDlg('Количество лотов должно быть не менее 1.',
-      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+    TDialogService.MessageDialog('Количество лотов должно быть не менее 1.',
+      TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
     SpinQuantity.SetFocus;
     Exit;
   end;
@@ -106,8 +106,8 @@ begin
     priceStr := Trim(EditTargetPrice.Text);
     if priceStr = '' then
     begin
-      MessageDlg('Для лимитного ордера укажите целевую цену.',
-        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+      TDialogService.MessageDialog('Для лимитного ордера укажите целевую цену.',
+        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
       EditTargetPrice.SetFocus;
       Exit;
     end;
@@ -116,16 +116,16 @@ begin
     priceStr := StringReplace(priceStr, ',', '.', [rfReplaceAll]);
     if not TryStrToFloat(priceStr, priceValue, TFormatSettings.Invariant) then
     begin
-      MessageDlg('Некорректный формат цены. Введите числовое значение.',
-        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+      TDialogService.MessageDialog('Некорректный формат цены. Введите числовое значение.',
+        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
       EditTargetPrice.SetFocus;
       Exit;
     end;
 
     if priceValue <= 0 then
     begin
-      MessageDlg('Целевая цена должна быть больше 0.',
-        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0);
+      TDialogService.MessageDialog('Целевая цена должна быть больше 0.',
+        TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil);
       EditTargetPrice.SetFocus;
       Exit;
     end;
