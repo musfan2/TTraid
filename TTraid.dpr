@@ -10,6 +10,7 @@ uses
   UOrderManager in 'Source\UOrderManager.pas',
   UApiClient in 'Source\UApiClient.pas',
   UOrderForm in 'Source\UOrderForm.pas' {OrderForm},
+  USettingsForm in 'Source\USettingsForm.pas' {SettingsForm},
   MyCriticalSection in 'Source\Core\MyCriticalSection.pas',
   MyFlag in 'Source\Core\MyFlag.pas',
   MyHttpClient in 'Source\Core\MyHttpClient.pas',
